@@ -1,4 +1,4 @@
-package com.example.examplemod;
+package tfar.strawstatuesinteractive;
 
 import net.minecraftforge.fml.common.Mod;
 

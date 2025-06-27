@@ -48,6 +48,9 @@ sourceSets.main.resources.srcDir 'src/generated/resources'
 dependencies {
     compileOnly project(":common")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
+
+    modImplementation "curse.maven:straw-statues-682564:5207884"
+    modImplementation "curse.maven:puzzles-lib-495476:6387081"
 }
 
 jar {
