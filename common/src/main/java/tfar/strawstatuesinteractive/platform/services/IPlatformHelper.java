@@ -1,5 +1,15 @@
 package tfar.strawstatuesinteractive.platform.services;
 
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import tfar.strawstatuesinteractive.network.client.S2CModPacket;
+import tfar.strawstatuesinteractive.network.client.S2CSetTalkingToPacket;
+import tfar.strawstatuesinteractive.network.server.C2SModPacket;
+
+import java.util.Collection;
+import java.util.function.Function;
+
 public interface IPlatformHelper {
 
     /**
@@ -33,4 +43,20 @@ public interface IPlatformHelper {
 
         return isDevelopmentEnvironment() ? "development" : "production";
     }
+
+    void sendToClient(S2CModPacket msg, ServerPlayer player);
+
+    default void sendToClients(S2CModPacket msg, Collection<ServerPlayer> playerList) {
+        playerList.forEach(player -> sendToClient(msg,player));
+    }
+
+    void sendToTrackingClients(S2CModPacket msg, Entity entity);
+
+    void sendToServer(C2SModPacket msg);
+
+    <MSG extends S2CModPacket> void registerClientPacket(Class<MSG> packetLocation, Function<FriendlyByteBuf,MSG> reader);
+
+    <MSG extends C2SModPacket> void registerServerPacket(Class<MSG> packetLocation, Function<FriendlyByteBuf,MSG> reader);
+
+    void handle(S2CSetTalkingToPacket s2CSetTalkingToPacket);
 }
