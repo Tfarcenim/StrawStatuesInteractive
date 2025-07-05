@@ -6,24 +6,34 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import org.checkerframework.checker.units.qual.A;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import tfar.strawstatuesinteractive.Dialogue;
 import tfar.strawstatuesinteractive.StrawStatueDuck;
 import tfar.strawstatuesinteractive.StrawStatuesInteractiveForge;
+import tfar.strawstatuesinteractive.network.SetDialoguePacket;
+import tfar.strawstatuesinteractive.platform.Services;
 
 import javax.annotation.Nullable;
 
 @Mixin(StrawStatue.class)
-public class StrawStatueMixin implements StrawStatueDuck {
+abstract class StrawStatueMixin extends LivingEntity implements StrawStatueDuck {
     @Nullable
     private Player talkingTo;
+
+    @Nullable Dialogue dialogue;
+
+    protected StrawStatueMixin(EntityType<? extends LivingEntity> entityType, Level level) {
+        super(entityType, level);
+    }
 
     @Override
     public Player getTalkingTo() {
@@ -33,6 +43,20 @@ public class StrawStatueMixin implements StrawStatueDuck {
     @Override
     public void setTalkingTo(@Nullable Player talkingTo) {
         this.talkingTo = talkingTo;
+    }
+
+    @Override
+    public void setDialogue(Dialogue dialogue) {
+        this.dialogue = dialogue;
+        if (!level().isClientSide) {
+            Services.PLATFORM.sendToTrackingClients(new SetDialoguePacket(this.getId(),dialogue),this);
+        }
+    }
+
+    @Nullable
+    @Override
+    public Dialogue getDialogue() {
+        return dialogue;
     }
 
     @Inject(method = "readAdditionalSaveData",at = @At("RETURN"))

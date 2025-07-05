@@ -1,11 +1,16 @@
 package tfar.strawstatuesinteractive.platform;
 
+import fuzs.strawstatues.world.entity.decoration.StrawStatue;
+import net.minecraft.commands.Commands;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraftforge.network.PacketDistributor;
 import tfar.strawstatuesinteractive.PacketHandlerForge;
+import tfar.strawstatuesinteractive.StrawStatueDuck;
+import tfar.strawstatuesinteractive.StrawStatuesInteractive;
 import tfar.strawstatuesinteractive.StrawStatuesInteractiveForge;
+import tfar.strawstatuesinteractive.network.SetDialoguePacket;
 import tfar.strawstatuesinteractive.network.client.S2CModPacket;
 import tfar.strawstatuesinteractive.network.client.S2CSetTalkingToPacket;
 import tfar.strawstatuesinteractive.network.server.C2SModPacket;
@@ -65,5 +70,23 @@ public class ForgePlatformHelper implements IPlatformHelper {
     @Override
     public void handle(S2CSetTalkingToPacket s2CSetTalkingToPacket) {
         StrawStatuesInteractiveForge.Client.handle(s2CSetTalkingToPacket);
+    }
+
+    @Override
+    public void handle(SetDialoguePacket s2CSetDialoguePacket) {
+        StrawStatuesInteractiveForge.Client.handle(s2CSetDialoguePacket);
+    }
+
+    @Override
+    public void handle(SetDialoguePacket c2SEditDialoguePacket, ServerPlayer player) {
+        Entity entity = player.level().getEntity(c2SEditDialoguePacket.entityID());
+        if (entity instanceof StrawStatue strawStatue) {
+            int permission = player.server.getProfilePermissions(player.getGameProfile());
+            if (permission >= Commands.LEVEL_GAMEMASTERS) {
+                StrawStatueDuck.of(strawStatue).setDialogue(c2SEditDialoguePacket.dialogue());
+            } else {
+                StrawStatuesInteractive.LOG.warn("Unauthorized player {} attempted to modify Straw Statue Dialogue",player);
+            }
+        }
     }
 }

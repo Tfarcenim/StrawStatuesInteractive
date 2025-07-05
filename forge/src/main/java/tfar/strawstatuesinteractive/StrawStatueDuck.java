@@ -11,6 +11,10 @@ public interface StrawStatueDuck {
 
     void setTalkingTo(@Nullable Player player);
 
+    @Nullable Dialogue getDialogue();
+
+    void setDialogue(Dialogue dialogue);
+
     static StrawStatueDuck of(StrawStatue strawStatue) {
         return (StrawStatueDuck)(Object) strawStatue;
     }

@@ -10,7 +10,6 @@ import net.minecraft.client.StringSplitter;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.font.TextFieldHelper;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.BookEditScreen;
@@ -20,24 +19,31 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraft.world.entity.Entity;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.joml.Quaternionf;
 import org.joml.Vector2i;
-import tfar.strawstatuesinteractive.StrawStatuesInteractive;
+import org.lwjgl.glfw.GLFW;
+import tfar.strawstatuesinteractive.Dialogue;
+import tfar.strawstatuesinteractive.StrawStatueDuck;
+import tfar.strawstatuesinteractive.network.SetDialoguePacket;
+import tfar.strawstatuesinteractive.network.server.C2SDP;
+import tfar.strawstatuesinteractive.platform.Services;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ListIterator;
 
 public class EditDialogueScreen extends AbstractConfiguringScreen {
 
+    private static final int TEXT_WIDTH = 180;
+    private static final int TEXT_HEIGHT = 176;
+
     private final TextFieldHelper pageEdit = new TextFieldHelper(this::getCurrentPageText, this::setCurrentPageText, this::getClipboard, this::setClipboard, (string) -> {
-        return string.length() < 1024 && this.font.wordWrapHeight(string, 114) <= 128;
+        return string.length() < 1024 && this.font.wordWrapHeight(string, TEXT_WIDTH) <= TEXT_HEIGHT;
     });
 
     /**
@@ -60,12 +66,25 @@ public class EditDialogueScreen extends AbstractConfiguringScreen {
 
     private Component pageMsg = CommonComponents.EMPTY;
 
+    private Button doneButton;
+
+
     public EditDialogueScreen(Component title,StrawStatue strawStatue) {
         super(title);
-        this.titleLabelX = 8;
-        this.titleLabelY = 6;
         this.displayCache = DisplayCache.EMPTY;
         this.strawStatue = strawStatue;
+
+        loadPages();
+
+
+    }
+
+    void loadPages() {
+
+        Dialogue dialogue = StrawStatueDuck.of(strawStatue).getDialogue();
+        if (dialogue != null) {
+            pages.addAll(dialogue.pages());
+        }
 
         if (this.pages.isEmpty()) {
             this.pages.add("");
@@ -115,14 +134,14 @@ public class EditDialogueScreen extends AbstractConfiguringScreen {
         if (s.isEmpty()) {
             return DisplayCache.EMPTY;
         } else {
-            int i = this.pageEdit.getCursorPos();
+            int cursorPos = this.pageEdit.getCursorPos();
             int j = this.pageEdit.getSelectionPos();
             IntList intlist = new IntArrayList();
             List<BookEditScreen.LineInfo> list = Lists.newArrayList();
             MutableInt mutableint = new MutableInt();
             MutableBoolean mutableboolean = new MutableBoolean();
             StringSplitter stringsplitter = this.font.getSplitter();
-            stringsplitter.splitLines(s, 114, Style.EMPTY, true, (p_98132_, p_98133_, p_98134_) -> {
+            stringsplitter.splitLines(s, TEXT_WIDTH, Style.EMPTY, true, (p_98132_, p_98133_, p_98134_) -> {
                 int k3 = mutableint.getAndIncrement();
                 String s2 = s.substring(p_98133_, p_98134_);
                 mutableboolean.setValue(s2.endsWith("\n"));
@@ -133,20 +152,20 @@ public class EditDialogueScreen extends AbstractConfiguringScreen {
                 list.add(new BookEditScreen.LineInfo(p_98132_, s3, bookeditscreen$pos2i1.x, bookeditscreen$pos2i1.y));
             });
             int[] aint = intlist.toIntArray();
-            boolean flag = i == s.length();
-            Vector2i bookeditscreen$pos2i;
-            if (flag && mutableboolean.isTrue()) {
-                bookeditscreen$pos2i = new Vector2i(0, list.size() * 9);
+            boolean eol = cursorPos == s.length();
+            Vector2i vector2i;
+            if (eol && mutableboolean.isTrue()) {
+                vector2i = new Vector2i(0, list.size() * 9);
             } else {
-                int k = findLineFromPos(aint, i);
-                int l = this.font.width(s.substring(aint[k], i));
-                bookeditscreen$pos2i = new Vector2i(l, k * 9);
+                int k = findLineFromPos(aint, cursorPos);
+                int l = this.font.width(s.substring(aint[k], cursorPos));
+                vector2i = new Vector2i(l, k * 9);
             }
 
             List<Rect2i> list1 = Lists.newArrayList();
-            if (i != j) {
-                int l2 = Math.min(i, j);
-                int i1 = Math.max(i, j);
+            if (cursorPos != j) {
+                int l2 = Math.min(cursorPos, j);
+                int i1 = Math.max(cursorPos, j);
                 int j1 = findLineFromPos(aint, l2);
                 int k1 = findLineFromPos(aint, i1);
                 if (j1 == k1) {
@@ -168,7 +187,7 @@ public class EditDialogueScreen extends AbstractConfiguringScreen {
                 }
             }
 
-            return new DisplayCache(s, bookeditscreen$pos2i, flag, aint, list.toArray(new BookEditScreen.LineInfo[0]), list1.toArray(new Rect2i[0]));
+            return new DisplayCache(s, vector2i, eol, aint, list.toArray(new BookEditScreen.LineInfo[0]), list1.toArray(new Rect2i[0]));
         }
     }
 
@@ -213,33 +232,33 @@ public class EditDialogueScreen extends AbstractConfiguringScreen {
             this.pageEdit.cut();
             return true;
         } else {
-            TextFieldHelper.CursorStep textfieldhelper$cursorstep = Screen.hasControlDown() ? TextFieldHelper.CursorStep.WORD : TextFieldHelper.CursorStep.CHARACTER;
+            TextFieldHelper.CursorStep cursorStep = Screen.hasControlDown() ? TextFieldHelper.CursorStep.WORD : TextFieldHelper.CursorStep.CHARACTER;
             return switch (keyCode) {
-                case 257, 335 -> {
+                case GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER -> {
                     this.pageEdit.insertText("\n");
                     yield true;
                 }
                 case 259 -> {
-                    this.pageEdit.removeFromCursor(-1, textfieldhelper$cursorstep);
+                    this.pageEdit.removeFromCursor(-1, cursorStep);
                     yield true;
                 }
                 case 261 -> {
-                    this.pageEdit.removeFromCursor(1, textfieldhelper$cursorstep);
+                    this.pageEdit.removeFromCursor(1, cursorStep);
                     yield true;
                 }
                 case 262 -> {
-                    this.pageEdit.moveBy(1, Screen.hasShiftDown(), textfieldhelper$cursorstep);
+                    this.pageEdit.moveBy(1, Screen.hasShiftDown(), cursorStep);
                     yield true;
                 }
                 case 263 -> {
-                    this.pageEdit.moveBy(-1, Screen.hasShiftDown(), textfieldhelper$cursorstep);
+                    this.pageEdit.moveBy(-1, Screen.hasShiftDown(), cursorStep);
                     yield true;
                 }
                 case 264 -> {
                     this.keyDown();
                     yield true;
                 }
-                case 265 -> {
+                case GLFW.GLFW_KEY_UP -> {
                     this.keyUp();
                     yield true;
                 }
@@ -408,14 +427,14 @@ public class EditDialogueScreen extends AbstractConfiguringScreen {
         int i = (this.width - 192) / 2;
 
         guiGraphics.drawString(this.font, this.pageMsg, i - j1 + 192 - 44, 18, 0, false);
-        DisplayCache bookeditscreen$displaycache = this.getDisplayCache();
+        DisplayCache cache = this.getDisplayCache();
 
-        for(BookEditScreen.LineInfo lineInfo : bookeditscreen$displaycache.lines) {
+        for(BookEditScreen.LineInfo lineInfo : cache.lines) {
             guiGraphics.drawString(this.font, lineInfo.asComponent, lineInfo.x, lineInfo.y, 0xff000000, false);
         }
 
-        this.renderHighlight(guiGraphics, bookeditscreen$displaycache.selection);
-        this.renderCursor(guiGraphics, bookeditscreen$displaycache.cursor, bookeditscreen$displaycache.cursorAtEnd);
+        this.renderHighlight(guiGraphics, cache.selection);
+        this.renderCursor(guiGraphics, cache.cursor, cache.cursorAtEnd);
 
         if (strawStatue != null) {
             InventoryScreen.renderEntityInInventory(guiGraphics, leftPos+50, topPos+164, 64,
@@ -456,6 +475,28 @@ public class EditDialogueScreen extends AbstractConfiguringScreen {
     protected void init() {
         super.init();
         this.clearDisplayCache();
+
+        this.doneButton = this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, (p_280851_) -> {
+            this.minecraft.setScreen(null);
+            this.saveChanges();
+        }).bounds(this.width / 2 + 2, 196, 98, 20).build());
+    }
+
+    private void eraseEmptyTrailingPages() {
+        ListIterator<String> listiterator = this.pages.listIterator(this.pages.size());
+
+        while(listiterator.hasPrevious() && listiterator.previous().isEmpty()) {
+            listiterator.remove();
+        }
+
+    }
+
+    private void saveChanges() {
+        if (this.isModified ||true) {
+            this.eraseEmptyTrailingPages();
+            //this.updateLocalCopy(publish);
+            Services.PLATFORM.sendToServer(new C2SDP(((Entity)strawStatue).getId(),new Dialogue(pages)));
+        }
     }
 
     /**
@@ -530,11 +571,5 @@ public class EditDialogueScreen extends AbstractConfiguringScreen {
         int i = this.pageEdit.getCursorPos();
         int j = this.getDisplayCache().changeLine(i, yChange);
         this.pageEdit.setCursorPos(j, Screen.hasShiftDown());
-    }
-
-    @Override
-    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        guiGraphics.drawString(this.font, this.title,leftPos+ this.titleLabelX,topPos+ this.titleLabelY, 0x404040, false);
-        //guiGraphics.drawString(this.font, this.playerInventoryTitle, this.inventoryLabelX, this.inventoryLabelY, 4210752, false);
     }
 }

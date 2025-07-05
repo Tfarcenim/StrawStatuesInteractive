@@ -27,6 +27,8 @@ public abstract class AbstractScreen extends Screen {
 
     protected AbstractScreen(Component title) {
         super(title);
+        this.titleLabelX = 8;
+        this.titleLabelY = 6;
     }
 
 

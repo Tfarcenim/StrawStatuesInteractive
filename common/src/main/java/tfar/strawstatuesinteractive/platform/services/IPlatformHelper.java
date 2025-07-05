@@ -3,6 +3,7 @@ package tfar.strawstatuesinteractive.platform.services;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import tfar.strawstatuesinteractive.network.SetDialoguePacket;
 import tfar.strawstatuesinteractive.network.client.S2CModPacket;
 import tfar.strawstatuesinteractive.network.client.S2CSetTalkingToPacket;
 import tfar.strawstatuesinteractive.network.server.C2SModPacket;
@@ -59,4 +60,8 @@ public interface IPlatformHelper {
     <MSG extends C2SModPacket> void registerServerPacket(Class<MSG> packetLocation, Function<FriendlyByteBuf,MSG> reader);
 
     void handle(S2CSetTalkingToPacket s2CSetTalkingToPacket);
+
+    void handle(SetDialoguePacket s2CSetDialoguePacket);
+
+    void handle(SetDialoguePacket c2SEditDialoguePacket, ServerPlayer player);
 }

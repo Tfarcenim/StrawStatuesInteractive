@@ -1,25 +1,106 @@
 package tfar.strawstatuesinteractive.client;
 
 import fuzs.strawstatues.world.entity.decoration.StrawStatue;
+import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.BookViewScreen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Player;
+import org.joml.Quaternionf;
+import tfar.strawstatuesinteractive.Dialogue;
+import tfar.strawstatuesinteractive.StrawStatueDuck;
 import tfar.strawstatuesinteractive.StrawStatuesInteractive;
+
+import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.List;
 
 public class DialogueScreen extends AbstractScreen {
 
+    private final StrawStatue strawStatue;
+    private int currentPage;
+    private int cachedPage = -1;
+    private Component pageMsg = CommonComponents.EMPTY;
+    private final BookViewScreen.BookAccess bookAccess;
+    private List<FormattedCharSequence> cachedPageComponents = Collections.emptyList();
+
+
+    protected static final int TEXT_WIDTH = 114;
+    protected static final int TEXT_HEIGHT = 128;
+
     public DialogueScreen(Component title, StrawStatue strawStatue) {
         super(title);
+        this.strawStatue = strawStatue;
+        bookAccess = new EntityAccess();
     }
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
-        renderBg(guiGraphics, mouseX, mouseY, partialTick);
+        int i = (this.width - 192) / 2;
+
+        if (this.cachedPage != this.currentPage) {
+            FormattedText formattedtext = this.bookAccess.getPage(this.currentPage);
+            this.cachedPageComponents = this.font.split(formattedtext, 114);
+            this.pageMsg = Component.translatable("book.pageIndicator", this.currentPage + 1, Math.max(this.bookAccess.getPageCount(), 1));
+        }
+
+        this.cachedPage = this.currentPage;
+        int i1 = this.font.width(this.pageMsg);
+        guiGraphics.drawString(this.font, this.pageMsg, i - i1 + 192 - 44, 18, 0, false);
+        int k = Math.min(128 / 9, this.cachedPageComponents.size());
+
+        for(int l = 0; l < k; ++l) {
+            FormattedCharSequence formattedcharsequence = this.cachedPageComponents.get(l);
+            guiGraphics.drawString(this.font, formattedcharsequence, i + 36, 32 + l * 9, 0, false);
+        }
+
+        Style style = this.getClickedComponentStyleAt(mouseX, mouseY);
+        if (style != null) {
+            guiGraphics.renderComponentHoverEffect(this.font, style, mouseX, mouseY);
+        }
+
+        if (strawStatue != null) {
+            float yBodyRot = (float) (((ArmorStand)strawStatue).yBodyRot * Math.PI/180 + Math.PI/8);
+            InventoryScreen.renderEntityInInventory(guiGraphics, leftPos+50, topPos+164, 64,
+                    new Quaternionf().rotateXYZ((float) Math.PI,/*Util.getMillis() / 200f*/yBodyRot,0), null, strawStatue);
+        }
     }
 
+    @Nullable
+    public Style getClickedComponentStyleAt(double mouseX, double mouseY) {
+        if (this.cachedPageComponents.isEmpty()) {
+            return null;
+        } else {
+            int i = Mth.floor(mouseX - (double)((this.width - 192) / 2) - 36.0D);
+            int j = Mth.floor(mouseY - 2.0D - 30.0D);
+            if (i >= 0 && j >= 0) {
+                int k = Math.min(128 / 9, this.cachedPageComponents.size());
+                if (i <= 114 && j < 9 * k + k) {
+                    int l = j / 9;
+                    if (l >= 0 && l < this.cachedPageComponents.size()) {
+                        FormattedCharSequence formattedcharsequence = this.cachedPageComponents.get(l);
+                        return this.minecraft.font.getSplitter().componentStyleAtWidth(formattedcharsequence, i);
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        }
+    }
 
 
     @Override
@@ -31,6 +112,34 @@ public class DialogueScreen extends AbstractScreen {
 
     @Override
     public boolean stillValid(Player player) {
-        return false;
+        return true;
+    }
+
+    public class EntityAccess implements BookViewScreen.BookAccess {
+
+        @Nullable
+        public Dialogue getDialogue() {
+            return StrawStatueDuck.of(strawStatue).getDialogue();
+        }
+
+        @Override
+        public int getPageCount() {
+            return getDialogue().pages().size();
+        }
+
+        @Override
+        public FormattedText getPageRaw(int index) {
+            String s = getDialogue().pages().get(index);
+
+            try {
+                FormattedText formattedtext = Component.Serializer.fromJson(s);
+                if (formattedtext != null) {
+                    return formattedtext;
+                }
+            } catch (Exception exception) {
+            }
+
+            return FormattedText.of(s);
+        }
     }
 }

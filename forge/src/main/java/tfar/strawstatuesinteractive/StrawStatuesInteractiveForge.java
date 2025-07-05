@@ -2,6 +2,7 @@ package tfar.strawstatuesinteractive;
 
 import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
 import fuzs.strawstatues.world.entity.decoration.StrawStatue;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -9,15 +10,17 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -26,7 +29,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import tfar.strawstatuesinteractive.client.AbstractConfiguringScreen;
 import tfar.strawstatuesinteractive.client.ConfigureDialogueScreen;
 import tfar.strawstatuesinteractive.client.DialogueScreen;
+import tfar.strawstatuesinteractive.network.SetDialoguePacket;
 import tfar.strawstatuesinteractive.network.client.S2CSetTalkingToPacket;
+import tfar.strawstatuesinteractive.platform.Services;
 
 @Mod(StrawStatuesInteractive.MOD_ID)
 public class StrawStatuesInteractiveForge {
@@ -43,6 +48,18 @@ public class StrawStatuesInteractiveForge {
     
         // Use Forge to bootstrap the Common mod.
         StrawStatuesInteractive.init();
+        MinecraftForge.EVENT_BUS.addListener(this::onTracking);
+    }
+
+    void onTracking(PlayerEvent.StartTracking event) {
+        ServerPlayer player = (ServerPlayer) event.getEntity();
+        Entity target = event.getTarget();
+        if (target instanceof StrawStatue strawStatue) {
+            Dialogue dialogue = StrawStatueDuck.of(strawStatue).getDialogue();
+            if (dialogue != null) {
+                Services.PLATFORM.sendToClient(new SetDialoguePacket(target.getId(), dialogue), player);
+            }
+        }
     }
 
     public static void yes(Player player, Level level, InteractionHand interactionHand, Entity target, Vec3 hitVector,
@@ -51,7 +68,13 @@ public class StrawStatuesInteractiveForge {
             if (player.level().isClientSide) {
                 Client.strawStatue = strawStatue;
                 if (player.isCrouching()) return;
-                Client.openScreen(player,strawStatue);
+
+                Dialogue dialogue = StrawStatueDuck.of(strawStatue).getDialogue();
+                if (dialogue != null) {
+                    Client.openScreen(player, strawStatue);
+                } else {
+                    player.displayClientMessage(Component.literal("No dialogue configured").withStyle(ChatFormatting.YELLOW),true);
+                }
             } else {
                 if (player.isCrouching()) return;
                 ((StrawStatueDuck)(Object)strawStatue).setTalkingTo(player);
@@ -61,12 +84,21 @@ public class StrawStatuesInteractiveForge {
         }
     }
 
-        public static void readExtraData(StrawStatue strawStatue,CompoundTag tag) {
+    public static void readExtraData(StrawStatue strawStatue,CompoundTag tag) {
+        StrawStatueDuck duck = StrawStatueDuck.of(strawStatue);
 
+        if (tag.contains(Dialogue.KEY)) {
+            CompoundTag compoundTag = tag.getCompound(Dialogue.KEY);
+            duck.setDialogue(Dialogue.load(compoundTag));
+        }
     }
 
     public static void saveExtraData(StrawStatue strawStatue,CompoundTag tag) {
-
+        StrawStatueDuck duck = StrawStatueDuck.of(strawStatue);
+        Dialogue dialogue = duck.getDialogue();
+        if (dialogue!=null) {
+            tag.put(Dialogue.KEY,dialogue.save());
+        }
     }
 
     public static class Client {
@@ -86,7 +118,7 @@ public class StrawStatuesInteractiveForge {
         }
 
         static void openScreen(Player player,StrawStatue strawStatue) {
-            Minecraft.getInstance().setScreen(new DialogueScreen(Component.literal("test"),strawStatue));
+            Minecraft.getInstance().setScreen(new DialogueScreen(((ArmorStand)strawStatue).getName(),strawStatue));
         }
 
         static void onPress(Button b) {
@@ -111,6 +143,17 @@ public class StrawStatuesInteractiveForge {
                     if (Minecraft.getInstance().screen instanceof AbstractConfiguringScreen abstractScreen) {
                         abstractScreen.setStrawStatue((StrawStatue)(Object) strawStatue);
                     }
+                }
+            }
+        }
+
+        public static void handle(SetDialoguePacket packet) {
+            ClientLevel level = Minecraft.getInstance().level;
+            if (level != null) {
+                Entity entity = level.getEntity(packet.entityID());
+                if (entity instanceof StrawStatueDuck strawStatue) {
+                    Dialogue dialogue = packet.dialogue();
+                    strawStatue.setDialogue(dialogue);
                 }
             }
         }

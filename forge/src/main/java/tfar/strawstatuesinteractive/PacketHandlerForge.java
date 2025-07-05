@@ -1,6 +1,5 @@
 package tfar.strawstatuesinteractive;
 
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
@@ -11,20 +10,9 @@ import tfar.strawstatuesinteractive.network.client.S2CModPacket;
 import tfar.strawstatuesinteractive.network.server.C2SModPacket;
 
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class PacketHandlerForge {
-
-    static int i;
-
-    public static  <MSG extends S2CModPacket> void registerClientPacket(Class<MSG> packetLocation, Function<FriendlyByteBuf, MSG> reader) {
-        INSTANCE.registerMessage(i++, packetLocation, MSG::write, reader, wrapS2C());
-    }
-
-    public static <MSG extends C2SModPacket> void registerServerPacket(Class<MSG> packetLocation, Function<FriendlyByteBuf, MSG> reader) {
-        INSTANCE.registerMessage(i++, packetLocation, MSG::write, reader, wrapC2S());
-    }
 
 
     public static SimpleChannel INSTANCE =  NetworkRegistry.newSimpleChannel(StrawStatuesInteractive.id("packet"), () -> "1.0", s -> true, s -> true);

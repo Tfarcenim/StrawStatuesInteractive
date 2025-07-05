@@ -54,7 +54,7 @@ public class ConfigureDialogueScreen extends AbstractConfiguringScreen {
     }
 
     private void advancedSettings() {
-
+        Minecraft.getInstance().pushGuiLayer(new AdvancedSettingsScreen(Component.literal("Advanced NPC Settings"),strawStatue));
     }
 
 
