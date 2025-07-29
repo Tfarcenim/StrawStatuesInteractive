@@ -13,6 +13,8 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import tfar.strawstatuesinteractive.CommandEntry;
+import tfar.strawstatuesinteractive.client.widgets.ScrollableButton;
+import tfar.strawstatuesinteractive.client.widgets.ScrollableEditBox;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -128,22 +130,26 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
 
             CommandEntry commandEntry;
 
-            EntryButton mode;
-            EntryButton enter;
-            EntryButton exit;
+            ScrollableButton mode;
+            ScrollableButton enter;
+            ScrollableButton exit;
 
-            EntryButton focusedButton;
+            ScrollableButton focusedButton;
 
-            List<EntryButton> buttons = new ArrayList<>();
+            List<ScrollableButton> buttons = new ArrayList<>();
+
+            ScrollableEditBox editBox;
 
             //button mode
             //on enter
             //on exit
             Entry(CommandEntry commandEntry) {
                 this.commandEntry = commandEntry;
-                mode = new EntryCheckbox(EntryButton.builder(Component.literal("I"), () -> pressMode()).bounds(10, 20, 20, 20),this,commandEntry.buttonMode);
-                enter = new EntryCheckbox(EntryButton.builder(Component.literal("I"), () ->  pressEnter()).bounds(95, 20, 20, 20),this,commandEntry.onEnter);
-                exit = new EntryCheckbox(EntryButton.builder(Component.literal("I"), () ->  pressExit()).bounds(175, 20, 20, 20),this,commandEntry.onExit);
+                mode = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () -> pressMode()).bounds(10, 20, 20, 20),this,commandEntry.buttonMode);
+                enter = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressEnter()).bounds(95, 20, 20, 20),this,commandEntry.onEnter);
+                exit = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressExit()).bounds(175, 20, 20, 20),this,commandEntry.onExit);
+
+                editBox = new ScrollableEditBox(minecraft.font,20,20,100,12,this);
 
                 buttons.add(mode);
                 buttons.add(enter);
@@ -178,7 +184,7 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
                 guiGraphics.drawString(font, onExitC, left + 200, top + 24, 0xffffff, false);
 
 
-                for (EntryButton button : buttons) {
+                for (ScrollableButton button : buttons) {
                     button.render(guiGraphics, index, top, left, width, height, mouseX, mouseY,
                             Objects.equals(DetailsList.this.getHovered(), this), partialTick);
                 }
@@ -222,9 +228,9 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
             }
 
             public boolean handleSubButtons(double mouseX, double mouseY, int button) {
-                for(EntryButton entryButton : buttons) {
-                    if (entryButton.mouseClicked(mouseX, mouseY, button)) {
-                        this.focusedButton = entryButton;
+                for(ScrollableButton scrollableButton : buttons) {
+                    if (scrollableButton.mouseClicked(mouseX, mouseY, button)) {
+                        this.focusedButton = scrollableButton;
                       //  if (button == 0) {
                       //      this.setDragging(true);
                       //  }
@@ -236,7 +242,7 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
             }
 
 
-            public static class EntryCheckbox extends EntryButton {
+            public static class ScrollableCheckbox extends ScrollableButton {
 
                 private static final ResourceLocation TEXTURE = new ResourceLocation("textures/gui/checkbox.png");
 
@@ -249,7 +255,7 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
                     return super.mouseClicked(mouseX, mouseY, button);
                 }
 
-                public EntryCheckbox(EntryButton.Builder builder,Entry parent,boolean selected) {
+                public ScrollableCheckbox(ScrollableButton.Builder builder, Entry parent, boolean selected) {
                     super(builder,parent);
                     this.selected = selected;
                 }

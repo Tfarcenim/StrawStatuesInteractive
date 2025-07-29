@@ -13,6 +13,7 @@ public class CommandEntry {
     public boolean buttonMode;
     public boolean onEnter;
     public boolean onExit;
+    public String name = "";
 
 
 }
