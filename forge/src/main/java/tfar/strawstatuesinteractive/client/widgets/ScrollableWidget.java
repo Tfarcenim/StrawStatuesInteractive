@@ -28,7 +28,7 @@ public abstract class ScrollableWidget implements GuiEventListener {
     }
 
 
-    public abstract void render(GuiGraphics guiGraphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean isMouseOver, float partialTick);
+    public abstract void renderScrollable(GuiGraphics guiGraphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean isMouseOver, float partialTick);
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -44,8 +44,7 @@ public abstract class ScrollableWidget implements GuiEventListener {
         handler.play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
     }
 
-    public void onClick(double mouseX, double mouseY) {
-    }
+    public abstract void onClick(double mouseX, double mouseY);
 
     protected boolean clicked(double mouseX, double mouseY) {
 
@@ -58,8 +57,21 @@ public abstract class ScrollableWidget implements GuiEventListener {
         return this.visible && xBounds && yBounds;
     }
 
+    /**
+     * Checks if the given mouse coordinates are over the GUI element.
+     * <p>
+     * @return {@code true} if the mouse is over the GUI element, {@code false} otherwise.
+     *
+     * @param mouseX the X coordinate of the mouse.
+     * @param mouseY the Y coordinate of the mouse.
+     */
+    @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        return clicked(mouseX,mouseY);
+    }
 
-    public boolean focused;
+
+    private boolean focused;
     @Override
     public void setFocused(boolean focused) {
         this.focused = focused;

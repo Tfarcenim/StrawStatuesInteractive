@@ -6,7 +6,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
@@ -382,7 +381,7 @@ public class ScrollableEditBox extends ScrollableWidget {
     }
 
     public boolean canConsumeInput() {
-        return this.isVisible() && this.isFocused() && this.isEditable();
+        return visible && this.isFocused() && this.isEditable();
     }
 
     /**
@@ -422,16 +421,12 @@ public class ScrollableEditBox extends ScrollableWidget {
 
 
     @Override
-    public void render(GuiGraphics guiGraphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean isMouseOver, float partialTick) {
-
-    }
-
-    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        if (this.isVisible()) {
+    public void renderScrollable(GuiGraphics guiGraphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean isMouseOver, float partialTick) {
+        if (visible) {
             if (this.isBordered()) {
                 int i = this.isFocused() ? -1 : 0xffa0a0a0;
-                guiGraphics.fill(x - 1, y - 1, x + this.width + 1, y + this.height + 1, i);
-                guiGraphics.fill(x, y, x + this.width, y + this.height, -16777216);
+                guiGraphics.fill(left+x - 1, top+y - 1, left+x + this.width + 1,top+ y + this.height + 1, i);
+                guiGraphics.fill(left+x,top+ y, left+x + this.width,top+ y + this.height, -16777216);
             }
 
             int i2 = this.isEditable ? this.textColor : this.textColorUneditable;
@@ -440,50 +435,50 @@ public class ScrollableEditBox extends ScrollableWidget {
             String s = this.font.plainSubstrByWidth(this.value.substring(this.displayPos), this.getInnerWidth());
             boolean flag = j >= 0 && j <= s.length();
             boolean flag1 = this.isFocused() && this.frame / 6 % 2 == 0 && flag;
-            int l = this.bordered ? x + 4 : x;
-            int i1 = this.bordered ? y + (this.height - 8) / 2 : y;
-            int j1 = l;
+            int borderX = left+(this.bordered ? x + 4 : x);
+            int borderY = top+(this.bordered ? y + (this.height - 8) / 2 : y);
+            int j1 = borderX;
             if (k > s.length()) {
                 k = s.length();
             }
 
             if (!s.isEmpty()) {
                 String s1 = flag ? s.substring(0, j) : s;
-                j1 = guiGraphics.drawString(this.font, this.formatter.apply(s1, this.displayPos), l, i1, i2);
+                j1 = guiGraphics.drawString(this.font, this.formatter.apply(s1, this.displayPos), borderX, borderY, i2);
             }
 
             boolean flag2 = this.cursorPos < this.value.length() || this.value.length() >= this.getMaxLength();
             int k1 = j1;
             if (!flag) {
-                k1 = j > 0 ? l + this.width : l;
+                k1 = j > 0 ? borderX + this.width : borderX;
             } else if (flag2) {
                 k1 = j1 - 1;
                 --j1;
             }
 
             if (!s.isEmpty() && flag && j < s.length()) {
-                guiGraphics.drawString(this.font, this.formatter.apply(s.substring(j), this.cursorPos), j1, i1, i2);
+                guiGraphics.drawString(this.font, this.formatter.apply(s.substring(j), this.cursorPos), j1, borderY, i2);
             }
 
             if (this.hint != null && s.isEmpty() && !this.isFocused()) {
-                guiGraphics.drawString(this.font, this.hint, j1, i1, i2);
+                guiGraphics.drawString(this.font, this.hint, j1, borderY, i2);
             }
 
             if (!flag2 && this.suggestion != null) {
-                guiGraphics.drawString(this.font, this.suggestion, k1 - 1, i1, -8355712);
+                guiGraphics.drawString(this.font, this.suggestion, k1 - 1, borderY, -8355712);
             }
 
             if (flag1) {
                 if (flag2) {
-                    guiGraphics.fill(RenderType.guiOverlay(), k1, i1 - 1, k1 + 1, i1 + 1 + 9, -3092272);
+                    guiGraphics.fill(RenderType.guiOverlay(), k1, borderY - 1, k1 + 1, borderY + 1 + 9, -3092272);
                 } else {
-                    guiGraphics.drawString(this.font, "_", k1, i1, i2);
+                    guiGraphics.drawString(this.font, "_", k1, borderY, i2);
                 }
             }
 
             if (k != j) {
-                int l1 = l + this.font.width(s.substring(0, k));
-                this.renderHighlight(guiGraphics, k1, i1 - 1, l1 - 1, i1 + 1 + 9);
+                int l1 = borderX + this.font.width(s.substring(0, k));
+                this.renderHighlight(guiGraphics, k1, borderY - 1, l1 - 1, borderY + 1 + 9);
             }
 
         }
@@ -571,18 +566,6 @@ public class ScrollableEditBox extends ScrollableWidget {
     }
 
     /**
-     * Checks if the given mouse coordinates are over the GUI element.
-     * <p>
-     * @return {@code true} if the mouse is over the GUI element, {@code false} otherwise.
-     *
-     * @param mouseX the X coordinate of the mouse.
-     * @param mouseY the Y coordinate of the mouse.
-     */
-    public boolean isMouseOver(double mouseX, double mouseY) {
-        return this.visible && mouseX >= (double)x && mouseX < (double)(x + this.width) && mouseY >= (double)y && mouseY < (double)(y + this.height);
-    }
-
-    /**
      * Sets the focus state of the GUI element.
      *
      * @param focused {@code true} to apply focus, {@code false} to remove focus
@@ -646,17 +629,6 @@ public class ScrollableEditBox extends ScrollableWidget {
      */
     public void setCanLoseFocus(boolean canLoseFocus) {
         this.canLoseFocus = canLoseFocus;
-    }
-
-    public boolean isVisible() {
-        return this.visible;
-    }
-
-    /**
-     * Sets whether this textbox is visible.
-     */
-    public void setVisible(boolean isVisible) {
-        this.visible = isVisible;
     }
 
     public void setSuggestion(@Nullable String suggestion) {

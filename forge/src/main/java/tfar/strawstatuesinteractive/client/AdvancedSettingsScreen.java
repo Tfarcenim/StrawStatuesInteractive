@@ -8,6 +8,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -15,6 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 import tfar.strawstatuesinteractive.CommandEntry;
 import tfar.strawstatuesinteractive.client.widgets.ScrollableButton;
 import tfar.strawstatuesinteractive.client.widgets.ScrollableEditBox;
+import tfar.strawstatuesinteractive.client.widgets.ScrollableWidget;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -60,6 +62,7 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
     }
 
 
+    @Override
     public void resize(Minecraft minecraft, int width, int height) {
         commandEntries.clear();
         for (DetailsList.Entry entry: list.children() ) {
@@ -76,14 +79,14 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
         public DetailsList() {
             super(AdvancedSettingsScreen.this.minecraft, AdvancedSettingsScreen.this.imageWidth,
                     AdvancedSettingsScreen.this.imageHeight- margin_bottom-margin_top, topPos+margin_top,
-                    topPos+imageHeight- margin_bottom, 60);
+                    topPos+imageHeight- margin_bottom, 64);
 
             setLeftPos(leftPos);
             setRenderBackground(false);
             setRenderTopAndBottom(false);
 
             for(int i = 0; i < commandEntries.size(); i++) {
-                this.addEntry(new DetailsList.Entry(commandEntries.get(i)));
+                this.addEntry(new DetailsList.Entry(commandEntries.get(i), i));
             }
         }
 
@@ -92,14 +95,17 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
             return 240;
         }
 
+        @Override
         public void setSelected(@Nullable DetailsList.Entry entry) {
             super.setSelected(entry);
         }
 
+        @Override
         protected int getScrollbarPosition() {
             return this.getRowWidth()+getRowLeft();
         }
 
+        @Override
         protected void renderSelection(GuiGraphics guiGraphics, int top, int width, int height, int outerColor, int innerColor) {
          //   int i = this.x0 + (this.width - width) / 2;
          //   int j = this.x0 + (this.width + width) / 2;
@@ -123,41 +129,46 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
         }
 
         void addEntry() {
-            children().add(new DetailsList.Entry());
+            children().add(new DetailsList.Entry(children().size()));
         }
 
-        public class Entry extends ObjectSelectionList.Entry<DetailsList.Entry> implements  GuiEventListener {
+        public class Entry extends ObjectSelectionList.Entry<DetailsList.Entry> implements ContainerEventHandler {
+
+            private boolean isDragging;
 
             CommandEntry commandEntry;
 
             ScrollableButton mode;
             ScrollableButton enter;
             ScrollableButton exit;
+            private final int index;
 
-            ScrollableButton focusedButton;
+            ScrollableWidget focusedButton;
 
-            List<ScrollableButton> buttons = new ArrayList<>();
+            List<ScrollableWidget> buttons = new ArrayList<>();
 
             ScrollableEditBox editBox;
 
             //button mode
             //on enter
             //on exit
-            Entry(CommandEntry commandEntry) {
+            Entry(CommandEntry commandEntry, int index) {
                 this.commandEntry = commandEntry;
                 mode = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () -> pressMode()).bounds(10, 20, 20, 20),this,commandEntry.buttonMode);
                 enter = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressEnter()).bounds(95, 20, 20, 20),this,commandEntry.onEnter);
                 exit = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressExit()).bounds(175, 20, 20, 20),this,commandEntry.onExit);
+                this.index = index;
 
-                editBox = new ScrollableEditBox(minecraft.font,20,20,100,12,this);
+                editBox = new ScrollableEditBox(minecraft.font,16,44,100,12,this);
 
                 buttons.add(mode);
                 buttons.add(enter);
                 buttons.add(exit);
+                buttons.add(editBox);
             }
 
-            Entry() {
-                this(new CommandEntry());
+            Entry(int index) {
+                this(new CommandEntry(),index);
             }
 
 
@@ -172,6 +183,7 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
                 commandEntry.onExit= !commandEntry.onExit;
             }
 
+            @Override
             public void render(GuiGraphics guiGraphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean hovering, float partialTick) {
                 Component component = Component.literal("Command "+index).withStyle(ChatFormatting.DARK_GRAY);
                 guiGraphics.drawString(font, component, left + 4, top + 4, 0xffffff, false);
@@ -184,8 +196,8 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
                 guiGraphics.drawString(font, onExitC, left + 200, top + 24, 0xffffff, false);
 
 
-                for (ScrollableButton button : buttons) {
-                    button.render(guiGraphics, index, top, left, width, height, mouseX, mouseY,
+                for (ScrollableWidget button : buttons) {
+                    button.renderScrollable(guiGraphics, index, top, left, width, height, mouseX, mouseY,
                             Objects.equals(DetailsList.this.getHovered(), this), partialTick);
                 }
             }
@@ -201,18 +213,54 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
                 RenderSystem.setShaderColor(1,1,1,1);
             }
 
+            @Override
             public Component getNarration() {
                 return CommonComponents.EMPTY;
             }
 
+            @Override
+            public List<? extends GuiEventListener> children() {
+                return buttons;
+            }
+
+            @Override
             public boolean mouseClicked(double mouseX, double mouseY, int button) {
+                boolean handle = ContainerEventHandler.super.mouseClicked(mouseX,mouseY,button);
                 if (button == 0) {
                     DetailsList.this.setSelected(this);
-                    handleSubButtons(mouseX,mouseY,button);
                     return true;
                 } else {
-                    return false;
+                    return handle;
                 }
+            }
+
+            @Override
+            public boolean isDragging() {
+                return isDragging;
+            }
+
+            @Override
+            public void setDragging(boolean isDragging) {
+                this.isDragging = isDragging;
+            }
+
+            @Nullable
+            @Override
+            public GuiEventListener getFocused() {
+                return focusedButton;
+            }
+
+            @Override
+            public void setFocused(@Nullable GuiEventListener focused) {
+                if (this.focusedButton != null) {
+                    this.focusedButton.setFocused(false);
+                }
+
+                if (focused != null) {
+                    focused.setFocused(true);
+                }
+
+                this.focusedButton = (ScrollableWidget) focused;
             }
 
             public int getTopPos() {
@@ -220,35 +268,18 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
             }
 
             public int getIndex() {
-                return children().indexOf(this);
+                return index;
             }
 
             public int getLeftPos() {
                 return DetailsList.this.getRowLeft();
             }
 
-            public boolean handleSubButtons(double mouseX, double mouseY, int button) {
-                for(ScrollableButton scrollableButton : buttons) {
-                    if (scrollableButton.mouseClicked(mouseX, mouseY, button)) {
-                        this.focusedButton = scrollableButton;
-                      //  if (button == 0) {
-                      //      this.setDragging(true);
-                      //  }
-
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-
             public static class ScrollableCheckbox extends ScrollableButton {
 
                 private static final ResourceLocation TEXTURE = new ResourceLocation("textures/gui/checkbox.png");
 
                 public boolean selected;
-
-
 
                 @Override
                 public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -261,8 +292,7 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
                 }
 
                 @Override
-                public void render(GuiGraphics guiGraphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean isMouseOver, float partialTick) {
-                    super.render(guiGraphics, index, top, left, width, height, mouseX, mouseY, isMouseOver, partialTick);
+                public void renderScrollable(GuiGraphics guiGraphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean isMouseOver, float partialTick) {
                     Minecraft minecraft = Minecraft.getInstance();
                     RenderSystem.enableDepthTest();
                     Font font = minecraft.font;

@@ -1,5 +1,6 @@
 package tfar.strawstatuesinteractive.client.widgets;
 
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
@@ -23,11 +24,14 @@ public class ScrollableButton extends ScrollableWidget {
         this.onClickEvent = onClickEvent;
     }
 
-    public void onClick(double mouseX, double mouseY) {
-        super.onClick(mouseX,mouseY);
-        onClickEvent.run();
+    @Override
+    public void renderScrollable(GuiGraphics guiGraphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean isMouseOver, float partialTick) {
+
     }
 
+    public void onClick(double mouseX, double mouseY) {
+        onClickEvent.run();
+    }
 
 
     public static Builder builder(Component message, Runnable onPress) {
