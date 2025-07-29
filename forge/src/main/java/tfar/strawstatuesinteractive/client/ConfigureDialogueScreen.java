@@ -42,11 +42,18 @@ public class ConfigureDialogueScreen extends AbstractConfiguringScreen {
         this.setInitialFocus(this.name);
 
         addRenderableWidget(Button.builder(Component.literal("Edit Dialogue"),button -> editDialogue())
-                .bounds(centerX-50,topPos+60,100,20).build());
+                .bounds(centerX-60,topPos+60,120,20).build());
+
+        addRenderableWidget(Button.builder(Component.literal("Preview Dialogue"),button -> preview())
+                .bounds(centerX-60,topPos+120,120,20).build());
 
         addRenderableWidget(Button.builder(Component.literal("Advanced Settings"),button -> advancedSettings())
                 .bounds(centerX - 60,topPos+imageHeight - 30,120,20).build());
 
+    }
+
+    private void preview() {
+        Minecraft.getInstance().pushGuiLayer(new PreviewDialogueScreen(((ArmorStand)(Object)strawStatue).getName(),strawStatue));
     }
 
     private void editDialogue() {

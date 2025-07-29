@@ -38,6 +38,9 @@ public class NPCCommandEntry {
         var entry = new NPCCommandEntry();
 
         entry.buttonMode = tag.getBoolean("button_mode");
+        entry.onEnter = tag.getBoolean("on_enter");
+        entry.onExit = tag.getBoolean("on_exit");
+        entry.name = tag.getString("name");
 
         return entry;
     }

@@ -1,5 +1,6 @@
 package tfar.strawstatuesinteractive.client;
 
+import com.mojang.datafixers.util.Pair;
 import fuzs.strawstatues.world.entity.decoration.StrawStatue;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -17,10 +18,11 @@ import org.joml.Quaternionf;
 import tfar.strawstatuesinteractive.Dialogue;
 import tfar.strawstatuesinteractive.NPCCommandEntry;
 import tfar.strawstatuesinteractive.StrawStatueDuck;
+import tfar.strawstatuesinteractive.network.server.C2SDialogueButtonPacket;
+import tfar.strawstatuesinteractive.platform.Services;
 
 import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class DialogueScreen extends AbstractScreen {
 
@@ -109,22 +111,33 @@ public class DialogueScreen extends AbstractScreen {
 
         if (dialogue != null) {
             List<NPCCommandEntry> commandEntries = dialogue.commands();
-            int maxWidth = imageWidth;
-            int count = commandEntries.size();
-            int buttonWidth = maxWidth / count;
-            for (int i= 0; i < count;i++ ) {
-                NPCCommandEntry commandEntry = commandEntries.get(i);
-                int finalI = i;
-                int xPos = i * buttonWidth;
-                Button button = Button.builder(Component.literal(commandEntry.name), button1 -> pressDialogueButton(finalI))
-                        .bounds(xPos, 205,buttonWidth,20).build();
+
+            List<Pair<Integer,NPCCommandEntry>> buttonCommands = new ArrayList<>();
+
+            for (int i= 0; i < commandEntries.size();i++ ) {
+                NPCCommandEntry entry = commandEntries.get(i);
+                if (entry.buttonMode) {
+                    buttonCommands.add(Pair.of(i, entry));
+                }
+            }
+
+            int buttonWidth = 100;
+            for (int j = 0; j < buttonCommands.size(); j++) {
+                Pair<Integer, NPCCommandEntry> entry = buttonCommands.get(j);
+                int i = entry.getFirst();
+
+                int row = j / 3;
+                int colum = j % 3;
+
+                Button button = Button.builder(Component.literal(entry.getSecond().name), button1 -> pressDialogueButton(i))
+                        .bounds(leftPos+5+colum*105,topPos+ 165+row * 14, buttonWidth, 20).build();
                 addRenderableWidget(button);
             }
         }
     }
 
     void pressDialogueButton(int i) {
-
+        Services.PLATFORM.sendToServer(new C2SDialogueButtonPacket(((ArmorStand)strawStatue).getId(),i));
     }
 
     @Override

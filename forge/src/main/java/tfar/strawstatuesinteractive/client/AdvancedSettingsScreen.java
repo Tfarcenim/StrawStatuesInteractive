@@ -13,6 +13,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.levelgen.flat.FlatLayerInfo;
 import tfar.strawstatuesinteractive.Dialogue;
 import tfar.strawstatuesinteractive.NPCCommandEntry;
 import tfar.strawstatuesinteractive.StrawStatueDuck;
@@ -105,7 +106,7 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
         public DetailsList() {
             super(AdvancedSettingsScreen.this.minecraft, LIST_WIDTH,
                     LIST_WIDTH- margin_bottom-margin_top, topPos+margin_top,
-                    topPos+imageHeight- margin_bottom, 80);
+                    topPos+imageHeight- margin_bottom, 100);
 
             setLeftPos(leftPos+35);
             setRenderBackground(false);
@@ -182,14 +183,14 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
             //on exit
             Entry(NPCCommandEntry NPCCommandEntry, int index) {
                 this.NPCCommandEntry = NPCCommandEntry;
-                mode = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () -> pressMode()).bounds(10, 30, 20, 20),this, NPCCommandEntry.buttonMode);
-                enter = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressEnter()).bounds(95, 30, 20, 20),this, NPCCommandEntry.onEnter);
-                exit = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressExit()).bounds(175, 30, 20, 20),this, NPCCommandEntry.onExit);
+                mode = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () -> pressMode()).bounds(10, 50, 20, 20),this, NPCCommandEntry.buttonMode);
+                enter = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressEnter()).bounds(95, 50, 20, 20),this, NPCCommandEntry.onEnter);
+                exit = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressExit()).bounds(175, 50, 20, 20),this, NPCCommandEntry.onExit);
                 trash = new ScrollableButton(ScrollableButton.builder(Component.literal("\uD83D\uDDD1").withStyle(ChatFormatting.RED),
                         () ->  pressTrash()).bounds(LIST_WIDTH - 14, 2, 20, 20).disableBackground(),this);
                 this.index = index;
 
-                editBox = new ScrollableEditBox(minecraft.font,12,55,120,12,this);
+                editBox = new ScrollableEditBox(minecraft.font,12,75,120,12,this);
 
                 editBox.setResponder(this::onNameChanged);
                 editBox.setValue(NPCCommandEntry.name);
@@ -359,7 +360,11 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
         }
 
         private void delete(Entry entry) {
-
+            remove(entry.index);
+            for (int i = 0; i < children().size();i++) {
+                Entry entry1 = children().get(i);
+                entry1.index = i;
+            }
         }
     }
 }

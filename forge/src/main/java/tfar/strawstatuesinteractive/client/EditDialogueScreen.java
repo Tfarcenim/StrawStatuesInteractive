@@ -474,7 +474,7 @@ public class EditDialogueScreen extends AbstractConfiguringScreen {
         this.clearDisplayCache();
 
         this.doneButton = this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, (p_280851_) -> {
-            this.minecraft.setScreen(null);
+            this.minecraft.popGuiLayer();
             this.saveChanges();
         }).bounds(this.width / 2 + 2, 196, 98, 20).build());
     }
