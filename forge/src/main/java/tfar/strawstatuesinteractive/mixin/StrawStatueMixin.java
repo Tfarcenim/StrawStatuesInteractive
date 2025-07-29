@@ -8,6 +8,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -25,15 +26,16 @@ import tfar.strawstatuesinteractive.platform.Services;
 import javax.annotation.Nullable;
 
 @Mixin(StrawStatue.class)
-abstract class StrawStatueMixin extends LivingEntity implements StrawStatueDuck {
+abstract class StrawStatueMixin extends ArmorStand implements StrawStatueDuck {
     @Nullable
     private Player talkingTo;
 
     @Nullable Dialogue dialogue;
 
-    protected StrawStatueMixin(EntityType<? extends LivingEntity> entityType, Level level) {
+    public StrawStatueMixin(EntityType<? extends ArmorStand> entityType, Level level) {
         super(entityType, level);
     }
+
 
     @Override
     public Player getTalkingTo() {
@@ -49,7 +51,7 @@ abstract class StrawStatueMixin extends LivingEntity implements StrawStatueDuck 
     public void setDialogue(Dialogue dialogue) {
         this.dialogue = dialogue;
         if (!level().isClientSide) {
-            Services.PLATFORM.sendToTrackingClients(new SetDialoguePacket(this.getId(),dialogue),this);
+            SetDialoguePacket.syncDialogues(this,dialogue);
         }
     }
 

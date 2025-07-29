@@ -2,11 +2,17 @@ package tfar.strawstatuesinteractive.network;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import org.jetbrains.annotations.Nullable;
 import tfar.strawstatuesinteractive.Dialogue;
+import tfar.strawstatuesinteractive.NPCCommandEntry;
+import tfar.strawstatuesinteractive.StrawStatueDuck;
 import tfar.strawstatuesinteractive.network.client.S2CModPacket;
+import tfar.strawstatuesinteractive.network.server.C2SDP;
 import tfar.strawstatuesinteractive.network.server.C2SModPacket;
 import tfar.strawstatuesinteractive.platform.Services;
 
+import java.util.List;
 import java.util.Objects;
 
 public class SetDialoguePacket implements S2CModPacket, C2SModPacket {
@@ -36,6 +42,20 @@ public class SetDialoguePacket implements S2CModPacket, C2SModPacket {
     public void write(FriendlyByteBuf to) {
         to.writeInt(entityID);
         dialogue.toPacket(to);
+    }
+
+    public static void syncDialogues(ArmorStand entity,Dialogue dialogue) {
+        Services.PLATFORM.sendToTrackingClients(new SetDialoguePacket(entity.getId(),dialogue),entity);
+    }
+
+    public static void updateDialogue(ArmorStand entity, @Nullable List<String> pages, @Nullable List<NPCCommandEntry> commands) {
+        Dialogue existing = StrawStatueDuck.of(entity).getDialogue();
+        if (pages == null) {
+            Services.PLATFORM.sendToServer(new C2SDP(entity.getId(),new Dialogue(existing != null ? existing.pages() : List.of(),commands)));
+        } else if (commands == null) {
+            Services.PLATFORM.sendToServer(new C2SDP(entity.getId(),new Dialogue(pages,existing != null ? existing.commands() : List.of())));
+
+        }
     }
 
     public int entityID() {

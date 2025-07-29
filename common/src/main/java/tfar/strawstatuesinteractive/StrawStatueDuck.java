@@ -1,6 +1,6 @@
 package tfar.strawstatuesinteractive;
 
-import fuzs.strawstatues.world.entity.decoration.StrawStatue;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Player;
 
 import javax.annotation.Nullable;
@@ -15,7 +15,7 @@ public interface StrawStatueDuck {
 
     void setDialogue(Dialogue dialogue);
 
-    static StrawStatueDuck of(StrawStatue strawStatue) {
+    static StrawStatueDuck of(ArmorStand strawStatue) {
         return (StrawStatueDuck)(Object) strawStatue;
     }
 }

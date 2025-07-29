@@ -495,7 +495,7 @@ public class EditDialogueScreen extends AbstractConfiguringScreen {
         if (this.isModified ||true) {
             this.eraseEmptyTrailingPages();
             //this.updateLocalCopy(publish);
-            Services.PLATFORM.sendToServer(new C2SDP(((Entity)strawStatue).getId(),new Dialogue(pages)));
+            SetDialoguePacket.updateDialogue(strawStatue,pages,null);
         }
     }
 

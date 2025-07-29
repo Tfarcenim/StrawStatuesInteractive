@@ -1,0 +1,53 @@
+package tfar.strawstatuesinteractive;
+
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class NPCCommandEntry {
+
+    public static final int MODE = 1;
+    public static final int ENTER = 1 << 1;
+    public static final int EXIT = 1 << 2;
+
+    public List<String> commands = new ArrayList<>();
+    public boolean buttonMode;
+    public boolean onEnter;
+    public boolean onExit;
+    public String name = "";
+
+    public CompoundTag toTag() {
+        CompoundTag tag = new CompoundTag();
+        tag.putBoolean("button_mode",buttonMode);
+        tag.putBoolean("on_enter",onEnter);
+        tag.putBoolean("on_exit",onExit);
+        tag.putString("name",name);
+        return tag;
+    }
+
+    public void toPacket(FriendlyByteBuf buf) {
+        buf.writeBoolean(buttonMode);
+        buf.writeBoolean(onEnter);
+        buf.writeBoolean(onExit);
+        buf.writeUtf(name);
+    }
+
+    public static NPCCommandEntry fromTag(CompoundTag tag) {
+        var entry = new NPCCommandEntry();
+
+        entry.buttonMode = tag.getBoolean("button_mode");
+
+        return entry;
+    }
+
+    public static NPCCommandEntry fromPacket(FriendlyByteBuf buf) {
+        var entry  = new NPCCommandEntry();
+        entry.buttonMode = buf.readBoolean();
+        entry.onEnter = buf.readBoolean();
+        entry.onExit = buf.readBoolean();
+        entry.name = buf.readUtf();
+        return entry;
+    }
+}
