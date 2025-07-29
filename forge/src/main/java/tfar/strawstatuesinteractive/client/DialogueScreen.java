@@ -1,24 +1,22 @@
 package tfar.strawstatuesinteractive.client;
 
 import fuzs.strawstatues.world.entity.decoration.StrawStatue;
-import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.BookViewScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Player;
 import org.joml.Quaternionf;
 import tfar.strawstatuesinteractive.Dialogue;
+import tfar.strawstatuesinteractive.NPCCommandEntry;
 import tfar.strawstatuesinteractive.StrawStatueDuck;
-import tfar.strawstatuesinteractive.StrawStatuesInteractive;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
@@ -107,6 +105,25 @@ public class DialogueScreen extends AbstractScreen {
     protected void init() {
         super.init();
 
+        Dialogue dialogue = StrawStatueDuck.of(strawStatue).getDialogue();
+
+        if (dialogue != null) {
+            List<NPCCommandEntry> commandEntries = dialogue.commands();
+            int maxWidth = imageWidth;
+            int count = commandEntries.size();
+            int buttonWidth = maxWidth / count;
+            for (int i= 0; i < count;i++ ) {
+                NPCCommandEntry commandEntry = commandEntries.get(i);
+                int finalI = i;
+                int xPos = i * buttonWidth;
+                Button button = Button.builder(Component.literal(commandEntry.name), button1 -> pressDialogueButton(finalI))
+                        .bounds(xPos, 205,buttonWidth,20).build();
+                addRenderableWidget(button);
+            }
+        }
+    }
+
+    void pressDialogueButton(int i) {
 
     }
 

@@ -19,7 +19,6 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.world.entity.Entity;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -29,8 +28,6 @@ import org.lwjgl.glfw.GLFW;
 import tfar.strawstatuesinteractive.Dialogue;
 import tfar.strawstatuesinteractive.StrawStatueDuck;
 import tfar.strawstatuesinteractive.network.SetDialoguePacket;
-import tfar.strawstatuesinteractive.network.server.C2SDP;
-import tfar.strawstatuesinteractive.platform.Services;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;

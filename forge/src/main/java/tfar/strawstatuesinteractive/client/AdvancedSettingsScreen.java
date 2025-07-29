@@ -98,14 +98,16 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
     public static final int margin_bottom = 45;
     public static final int margin_top = 16;
 
+    public static final int LIST_WIDTH = 250;
+
     public class DetailsList extends ObjectSelectionList<DetailsList.Entry> {
 
         public DetailsList() {
-            super(AdvancedSettingsScreen.this.minecraft, AdvancedSettingsScreen.this.imageWidth,
-                    AdvancedSettingsScreen.this.imageHeight- margin_bottom-margin_top, topPos+margin_top,
-                    topPos+imageHeight- margin_bottom, 64);
+            super(AdvancedSettingsScreen.this.minecraft, LIST_WIDTH,
+                    LIST_WIDTH- margin_bottom-margin_top, topPos+margin_top,
+                    topPos+imageHeight- margin_bottom, 80);
 
-            setLeftPos(leftPos);
+            setLeftPos(leftPos+35);
             setRenderBackground(false);
             setRenderTopAndBottom(false);
 
@@ -116,7 +118,7 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
 
         @Override
         public int getRowWidth() {
-            return 240;
+            return LIST_WIDTH;
         }
 
         @Override
@@ -165,7 +167,7 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
             ScrollableButton mode;
             ScrollableButton enter;
             ScrollableButton exit;
-            private final int index;
+            private int index;
 
             ScrollableWidget focusedButton;
 
@@ -173,17 +175,21 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
 
             ScrollableEditBox editBox;
 
+            ScrollableButton trash;
+
             //button mode
             //on enter
             //on exit
             Entry(NPCCommandEntry NPCCommandEntry, int index) {
                 this.NPCCommandEntry = NPCCommandEntry;
-                mode = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () -> pressMode()).bounds(10, 20, 20, 20),this, NPCCommandEntry.buttonMode);
-                enter = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressEnter()).bounds(95, 20, 20, 20),this, NPCCommandEntry.onEnter);
-                exit = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressExit()).bounds(175, 20, 20, 20),this, NPCCommandEntry.onExit);
+                mode = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () -> pressMode()).bounds(10, 30, 20, 20),this, NPCCommandEntry.buttonMode);
+                enter = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressEnter()).bounds(95, 30, 20, 20),this, NPCCommandEntry.onEnter);
+                exit = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressExit()).bounds(175, 30, 20, 20),this, NPCCommandEntry.onExit);
+                trash = new ScrollableButton(ScrollableButton.builder(Component.literal("\uD83D\uDDD1").withStyle(ChatFormatting.RED),
+                        () ->  pressTrash()).bounds(LIST_WIDTH - 14, 2, 20, 20).disableBackground(),this);
                 this.index = index;
 
-                editBox = new ScrollableEditBox(minecraft.font,16,44,100,12,this);
+                editBox = new ScrollableEditBox(minecraft.font,12,55,120,12,this);
 
                 editBox.setResponder(this::onNameChanged);
                 editBox.setValue(NPCCommandEntry.name);
@@ -192,6 +198,7 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
                 buttons.add(enter);
                 buttons.add(exit);
                 buttons.add(editBox);
+                buttons.add(trash);
             }
 
             private void onNameChanged(String s) {
@@ -214,17 +221,22 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
                 NPCCommandEntry.onExit= !NPCCommandEntry.onExit;
             }
 
+            void pressTrash() {
+                AdvancedSettingsScreen.this.list.delete(this);
+            }
+
             @Override
             public void render(GuiGraphics guiGraphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean hovering, float partialTick) {
                 Component component = Component.literal("Command "+index).withStyle(ChatFormatting.DARK_GRAY);
                 guiGraphics.drawString(font, component, left + 4, top + 4, 0xffffff, false);
 
+                int labelY = top + 35;
                 Component buttonModeC = Component.literal("Button Mode").withStyle(ChatFormatting.DARK_GRAY);
-                guiGraphics.drawString(font, buttonModeC, left + 35, top + 24, 0xffffff, false);
+                guiGraphics.drawString(font, buttonModeC, left + 35, labelY, 0xffffff, false);
                 Component onEnterC = Component.literal("On Enter").withStyle(ChatFormatting.DARK_GRAY);
-                guiGraphics.drawString(font, onEnterC, left + 120, top + 24, 0xffffff, false);
+                guiGraphics.drawString(font, onEnterC, left + 120, labelY, 0xffffff, false);
                 Component onExitC = Component.literal("On Exit").withStyle(ChatFormatting.DARK_GRAY);
-                guiGraphics.drawString(font, onExitC, left + 200, top + 24, 0xffffff, false);
+                guiGraphics.drawString(font, onExitC, left + 200, labelY, 0xffffff, false);
 
 
                 for (ScrollableWidget button : buttons) {
@@ -240,7 +252,7 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
                     RenderSystem.setShaderColor(.5f,1,.5f,1);
                 }
                 guiGraphics.blitNineSlicedSized(BACKGROUND,left,top,
-                        width,height,4,4,12,12,0,0,12,12);
+                        width-3,height,4,4,12,12,0,0,12,12);
                 RenderSystem.setShaderColor(1,1,1,1);
             }
 
@@ -344,6 +356,10 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
                     selected = !selected;
                 }
             }
+        }
+
+        private void delete(Entry entry) {
+
         }
     }
 }

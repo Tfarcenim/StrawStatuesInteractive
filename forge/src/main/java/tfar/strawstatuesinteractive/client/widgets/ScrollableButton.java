@@ -1,5 +1,6 @@
 package tfar.strawstatuesinteractive.client.widgets;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -14,18 +15,28 @@ public class ScrollableButton extends ScrollableWidget {
 
 
     private final Runnable onClickEvent;
+    private boolean renderBackground;
 
     public ScrollableButton(Builder builder, AdvancedSettingsScreen.DetailsList.Entry parent) {
-        this(builder.x, builder.y, builder.width, builder.height,builder.onPress, parent);
+        this(builder.x, builder.y, builder.width, builder.height,builder.message,builder.onPress, builder.renderBackground, parent);
     }
 
-    public ScrollableButton(int x, int y, int width, int height, Runnable onClickEvent, AdvancedSettingsScreen.DetailsList.Entry parent) {
-        super(x, y, width, height, parent);
+    public ScrollableButton(int x, int y, int width, int height, Component message, Runnable onClickEvent, boolean renderBackground, AdvancedSettingsScreen.DetailsList.Entry parent) {
+        super(x, y, width, height,message, parent);
         this.onClickEvent = onClickEvent;
+        this.renderBackground = renderBackground;
     }
 
     @Override
     public void renderScrollable(GuiGraphics guiGraphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean isMouseOver, float partialTick) {
+        if (renderBackground) {
+            renderBackground(guiGraphics, index, top, left, width, height, mouseX, mouseY, isMouseOver, partialTick);
+        }
+        guiGraphics.drawString(Minecraft.getInstance().font,message ,left+x,top+y,0xffffff);
+        //renderString(guiGraphics, Minecraft.getInstance().font,0xffffffff,left,top);
+    }
+
+    public void renderBackground(GuiGraphics guiGraphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean isMouseOver, float partialTick) {
 
     }
 
@@ -47,6 +58,7 @@ public class ScrollableButton extends ScrollableWidget {
         public int y;
         public int width = 150;
         public int height = 20;
+        boolean renderBackground = true;
         public Button.CreateNarration createNarration = DEFAULT_NARRATION;
         protected static final Button.CreateNarration DEFAULT_NARRATION = Supplier::get;
         public Builder(Component message, Runnable onPress) {
@@ -77,6 +89,11 @@ public class ScrollableButton extends ScrollableWidget {
 
         public Builder tooltip(@Nullable Tooltip tooltip) {
             this.tooltip = tooltip;
+            return this;
+        }
+
+        public Builder disableBackground() {
+            renderBackground = false;
             return this;
         }
 

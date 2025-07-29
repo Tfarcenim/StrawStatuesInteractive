@@ -82,7 +82,7 @@ public class ScrollableEditBox extends ScrollableWidget {
     }
 
     public ScrollableEditBox(Font font, int x, int y, int width, int height, AdvancedSettingsScreen.DetailsList.Entry parent, @Nullable ScrollableEditBox editBox) {
-        super(x, y, width, height,parent);
+        super(x, y, width, height,Component.empty(),parent);
         this.font = font;
         if (editBox != null) {
             this.setValue(editBox.getValue());
