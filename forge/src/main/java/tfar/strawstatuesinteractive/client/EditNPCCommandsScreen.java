@@ -4,50 +4,40 @@ import com.google.common.collect.Lists;
 import fuzs.strawstatues.world.entity.decoration.StrawStatue;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
-import net.minecraft.client.GameNarrator;
 import net.minecraft.client.StringSplitter;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.font.TextFieldHelper;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.StringTag;
-import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.network.protocol.game.ServerboundEditBookPacket;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.lwjgl.glfw.GLFW;
 import tfar.strawstatuesinteractive.NPCCommandEntry;
 
 public class EditNPCCommandsScreen extends Screen {
-    private static final int TEXT_WIDTH = 114;
-    private static final int TEXT_HEIGHT = 128;
-    private static final int IMAGE_WIDTH = 192;
-    private static final int IMAGE_HEIGHT = 192;
-    private static final Component EDIT_TITLE_LABEL = Component.translatable("book.editTitle");
-    private static final Component FINALIZE_WARNING_LABEL = Component.translatable("book.finalizeWarning");
+    private static final int TEXT_WIDTH = 300;
+    private static final int TEXT_HEIGHT = 224;
+    private static final int IMAGE_WIDTH = 320;
+    private static final int IMAGE_HEIGHT = 240;
+    static final int PAGE_TEXT_X_OFFSET = 8;
     private static final FormattedCharSequence BLACK_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(ChatFormatting.BLACK));
     private static final FormattedCharSequence GRAY_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(ChatFormatting.GRAY));
     private final StrawStatue strawStatue;
@@ -60,10 +50,9 @@ public class EditNPCCommandsScreen extends Screen {
      * Update ticks since the gui was opened
      */
     private int frameTick;
-    private int currentPage;
-    private final List<String> pages = Lists.newArrayList();
+    private String page = "";
     private final TextFieldHelper pageEdit = new TextFieldHelper(this::getCurrentPageText, this::setCurrentPageText, this::getClipboard, this::setClipboard, (p_280853_) -> {
-        return p_280853_.length() < 1024 && this.font.wordWrapHeight(p_280853_, 114) <= 128;
+        return p_280853_.length() < 2048 && this.font.wordWrapHeight(p_280853_, TEXT_WIDTH) <= TEXT_HEIGHT;
     });
 
     /**
@@ -74,16 +63,19 @@ public class EditNPCCommandsScreen extends Screen {
     
     @Nullable
     private DisplayCache displayCache = DisplayCache.EMPTY;
-    private Component pageMsg = CommonComponents.EMPTY;
 
     public EditNPCCommandsScreen(MutableComponent commands, StrawStatue strawStatue, NPCCommandEntry npcCommandEntry) {
         super(commands);
         this.strawStatue = strawStatue;
         this.npcCommandEntry = npcCommandEntry;
+        loadString();
+    }
 
-        if (this.pages.isEmpty()) {
-            this.pages.add("");
-        }
+    void loadString() {
+        StringBuilder full = new StringBuilder();
+        String s = String.join("\n", npcCommandEntry.commands);
+        setCurrentPageText(s);
+        this.pageEdit.setCursorToEnd(false);
     }
     
 
@@ -98,10 +90,6 @@ public class EditNPCCommandsScreen extends Screen {
         return this.minecraft != null ? TextFieldHelper.getClipboardContents(this.minecraft) : "";
     }
 
-    private int getNumPages() {
-        return this.pages.size();
-    }
-
     public void tick() {
         super.tick();
         ++this.frameTick;
@@ -111,52 +99,18 @@ public class EditNPCCommandsScreen extends Screen {
         this.clearDisplayCache();
     }
 
-    private void pageBack() {
-        if (this.currentPage > 0) {
-            --this.currentPage;
-        }
-
-        this.updateButtonVisibility();
-        this.clearDisplayCacheAfterPageChange();
-    }
-
-    private void pageForward() {
-        if (this.currentPage < this.getNumPages() - 1) {
-            ++this.currentPage;
-        } else {
-            this.appendPageToBook();
-            if (this.currentPage < this.getNumPages() - 1) {
-                ++this.currentPage;
-            }
-        }
-
-        this.updateButtonVisibility();
-        this.clearDisplayCacheAfterPageChange();
-    }
-
-    private void updateButtonVisibility() {
-
-    }
-
-    private void eraseEmptyTrailingPages() {
-        ListIterator<String> listiterator = this.pages.listIterator(this.pages.size());
-
-        while(listiterator.hasPrevious() && listiterator.previous().isEmpty()) {
-            listiterator.remove();
-        }
-
+    @Override
+    public void onClose() {
+        super.onClose();
+        saveChanges();
     }
 
     private void saveChanges() {
         if (this.isModified) {
-            this.eraseEmptyTrailingPages();
-        }
-    }
-
-    private void appendPageToBook() {
-        if (this.getNumPages() < 100) {
-            this.pages.add("");
-            this.isModified = true;
+            npcCommandEntry.commands.clear();
+            for (LineInfo lineInfo : displayCache.lines) {
+                npcCommandEntry.commands.add(lineInfo.contents);
+            }
         }
     }
 
@@ -221,44 +175,51 @@ public class EditNPCCommandsScreen extends Screen {
             return true;
         } else {
             TextFieldHelper.CursorStep textfieldhelper$cursorstep = Screen.hasControlDown() ? TextFieldHelper.CursorStep.WORD : TextFieldHelper.CursorStep.CHARACTER;
-            switch (keyCode) {
-                case 257:
-                case 335:
+            return switch (keyCode) {
+                case 257, 335 -> {
                     this.pageEdit.insertText("\n");
-                    return true;
-                case 259:
+                    yield true;
+                }
+                case 259 -> {
                     this.pageEdit.removeFromCursor(-1, textfieldhelper$cursorstep);
-                    return true;
-                case 261:
+                    yield true;
+                }
+                case 261 -> {
                     this.pageEdit.removeFromCursor(1, textfieldhelper$cursorstep);
-                    return true;
-                case 262:
+                    yield true;
+                }
+                case 262 -> {
                     this.pageEdit.moveBy(1, Screen.hasShiftDown(), textfieldhelper$cursorstep);
-                    return true;
-                case 263:
+                    yield true;
+                }
+                case 263 -> {
                     this.pageEdit.moveBy(-1, Screen.hasShiftDown(), textfieldhelper$cursorstep);
-                    return true;
-                case 264:
+                    yield true;
+                }
+                case GLFW.GLFW_KEY_DOWN -> {
                     this.keyDown();
-                    return true;
-                case 265:
+                    yield true;
+                }
+                case GLFW.GLFW_KEY_UP -> {
                     this.keyUp();
-                    return true;
-               // case 266:
-                    //this.backButton.onPress();
-                 //   return true;
-               // case 267:
-                   // this.forwardButton.onPress();
-                  //  return true;
-                case 268:
+                    yield true;
+                }
+                // case 266:
+                //this.backButton.onPress();
+                //   return true;
+                // case 267:
+                // this.forwardButton.onPress();
+                //  return true;
+                case 268 -> {
                     this.keyHome();
-                    return true;
-                case 269:
+                    yield true;
+                }
+                case 269 -> {
                     this.keyEnd();
-                    return true;
-                default:
-                    return false;
-            }
+                    yield true;
+                }
+                default -> false;
+            };
         }
     }
 
@@ -300,16 +261,13 @@ public class EditNPCCommandsScreen extends Screen {
     }
 
     private String getCurrentPageText() {
-        return this.currentPage >= 0 && this.currentPage < this.pages.size() ? this.pages.get(this.currentPage) : "";
+        return page != null ? page : "";
     }
 
     private void setCurrentPageText(String text) {
-        if (this.currentPage >= 0 && this.currentPage < this.pages.size()) {
-            this.pages.set(this.currentPage, text);
-            this.isModified = true;
-            this.clearDisplayCache();
-        }
-
+        this.page = text;
+        this.isModified = true;
+        this.clearDisplayCache();
     }
 
     /**
@@ -328,10 +286,14 @@ public class EditNPCCommandsScreen extends Screen {
         guiGraphics.blitNineSlicedSized(AbstractScreen.BACKGROUND,i,0,
                 IMAGE_WIDTH,IMAGE_HEIGHT,4,4,12,12,0,0,12,12);
 
+        guiGraphics.blitNineSlicedSized(AbstractScreen.SLOT,i+5,15,
+                IMAGE_WIDTH-10,IMAGE_HEIGHT-20,4,4,12,12,0,0,12,12);
+
+        guiGraphics.drawString(this.font, this.title,i +8,6, 0x404040, false);
+
+
         this.setFocused(null);
 
-        int j1 = this.font.width(this.pageMsg);
-        guiGraphics.drawString(this.font, this.pageMsg, i - j1 + 192 - 44, 18, 0, false);
         DisplayCache bookeditscreen$displaycache = this.getDisplayCache();
 
         for(LineInfo bookeditscreen$lineinfo : bookeditscreen$displaycache.lines) {
@@ -368,11 +330,11 @@ public class EditNPCCommandsScreen extends Screen {
     }
 
     private Pos2i convertScreenToLocal(Pos2i screenPos) {
-        return new Pos2i(screenPos.x - (this.width - 192) / 2 - 36, screenPos.y - 32);
+        return new Pos2i(screenPos.x - (this.width - IMAGE_WIDTH) / 2 - PAGE_TEXT_X_OFFSET, screenPos.y - 18);
     }
 
     private Pos2i convertLocalToScreen(Pos2i localScreenPos) {
-        return new Pos2i(localScreenPos.x + (this.width - 192) / 2 + 36, localScreenPos.y + 32);
+        return new Pos2i(localScreenPos.x + (this.width - IMAGE_WIDTH) / 2 + PAGE_TEXT_X_OFFSET, localScreenPos.y + 18);
     }
 
     /**
@@ -448,7 +410,6 @@ public class EditNPCCommandsScreen extends Screen {
     private DisplayCache getDisplayCache() {
         if (this.displayCache == null) {
             this.displayCache = this.rebuildDisplayCache();
-            this.pageMsg = Component.translatable("book.pageIndicator", this.currentPage + 1, this.getNumPages());
         }
 
         return this.displayCache;
@@ -456,11 +417,6 @@ public class EditNPCCommandsScreen extends Screen {
 
     private void clearDisplayCache() {
         this.displayCache = null;
-    }
-
-    private void clearDisplayCacheAfterPageChange() {
-        this.pageEdit.setCursorToEnd();
-        this.clearDisplayCache();
     }
 
     private DisplayCache rebuildDisplayCache() {
@@ -475,7 +431,7 @@ public class EditNPCCommandsScreen extends Screen {
             MutableInt mutableint = new MutableInt();
             MutableBoolean mutableboolean = new MutableBoolean();
             StringSplitter stringsplitter = this.font.getSplitter();
-            stringsplitter.splitLines(s, 114, Style.EMPTY, true, (p_98132_, p_98133_, p_98134_) -> {
+            stringsplitter.splitLines(s, TEXT_WIDTH, Style.EMPTY, true, (style, p_98133_, p_98134_) -> {
                 int k3 = mutableint.getAndIncrement();
                 String s2 = s.substring(p_98133_, p_98134_);
                 mutableboolean.setValue(s2.endsWith("\n"));
@@ -483,7 +439,7 @@ public class EditNPCCommandsScreen extends Screen {
                 int l3 = k3 * 9;
                 Pos2i bookeditscreen$pos2i1 = this.convertLocalToScreen(new Pos2i(0, l3));
                 intlist.add(p_98133_);
-                list.add(new LineInfo(p_98132_, s3, bookeditscreen$pos2i1.x, bookeditscreen$pos2i1.y));
+                list.add(new LineInfo(style, s3, bookeditscreen$pos2i1.x, bookeditscreen$pos2i1.y));
             });
             int[] aint = intlist.toIntArray();
             boolean flag = i == s.length();
@@ -605,7 +561,6 @@ public class EditNPCCommandsScreen extends Screen {
         }
     }
 
-    @OnlyIn(Dist.CLIENT)
     public static class LineInfo {
         public final Style style;
         public final String contents;
@@ -622,14 +577,6 @@ public class EditNPCCommandsScreen extends Screen {
         }
     }
 
-    @OnlyIn(Dist.CLIENT)
-    static class Pos2i {
-        public final int x;
-        public final int y;
-
-        Pos2i(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
+    record Pos2i(int x, int y) {
     }
 }

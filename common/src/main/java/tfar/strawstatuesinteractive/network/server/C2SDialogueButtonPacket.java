@@ -3,6 +3,7 @@ package tfar.strawstatuesinteractive.network.server;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import tfar.strawstatuesinteractive.platform.Services;
 
 public record C2SDialogueButtonPacket(int entityID, int button) implements C2SModPacket{
 
@@ -12,10 +13,7 @@ public record C2SDialogueButtonPacket(int entityID, int button) implements C2SMo
 
     @Override
     public void handleServer(ServerPlayer player) {
-        Entity entity = player.level().getEntity(entityID);
-        if (entity != null) {
-
-        }
+        Services.PLATFORM.handle(this,player);
     }
 
     @Override

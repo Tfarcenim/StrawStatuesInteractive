@@ -51,7 +51,7 @@ public class DialogueScreen extends AbstractScreen {
         if (this.cachedPage != this.currentPage) {
             FormattedText formattedtext = this.bookAccess.getPage(this.currentPage);
             this.cachedPageComponents = this.font.split(formattedtext, 114);
-            this.pageMsg = Component.translatable("book.pageIndicator", this.currentPage + 1, Math.max(this.bookAccess.getPageCount(), 1));
+            this.pageMsg = Component.empty();//Component.translatable("book.pageIndicator", this.currentPage + 1, Math.max(this.bookAccess.getPageCount(), 1));
         }
 
         this.cachedPage = this.currentPage;

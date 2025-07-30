@@ -186,8 +186,8 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
             Entry(NPCCommandEntry npcCommandEntry, int index) {
                 this.npcCommandEntry = npcCommandEntry;
                 mode = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () -> pressMode()).bounds(10, 50, 20, 20),this, npcCommandEntry.buttonMode);
-                enter = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressEnter()).bounds(95, 50, 20, 20),this, npcCommandEntry.onEnter);
-                exit = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressExit()).bounds(175, 50, 20, 20),this, npcCommandEntry.onExit);
+                enter = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressEnter()).bounds(100, 50, 20, 20),this, npcCommandEntry.onEnter);
+                exit = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressExit()).bounds(180, 50, 20, 20),this, npcCommandEntry.onExit);
                 trash = new ScrollableButton(ScrollableButton.builder(Component.literal("\uD83D\uDDD1").withStyle(ChatFormatting.RED),
                         () ->  pressTrash()).bounds(LIST_WIDTH - 14, 2, 20, 20).disableBackground(),this);
                 this.index = index;
@@ -240,9 +240,9 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
                 Component buttonModeC = Component.literal("Button Mode").withStyle(ChatFormatting.DARK_GRAY);
                 guiGraphics.drawString(font, buttonModeC, left + 35, labelY, 0xffffff, false);
                 Component onEnterC = Component.literal("On Enter").withStyle(ChatFormatting.DARK_GRAY);
-                guiGraphics.drawString(font, onEnterC, left + 120, labelY, 0xffffff, false);
+                guiGraphics.drawString(font, onEnterC, left + 125, labelY, 0xffffff, false);
                 Component onExitC = Component.literal("On Exit").withStyle(ChatFormatting.DARK_GRAY);
-                guiGraphics.drawString(font, onExitC, left + 200, labelY, 0xffffff, false);
+                guiGraphics.drawString(font, onExitC, left + 205, labelY, 0xffffff, false);
 
 
                 for (ScrollableWidget button : buttons) {

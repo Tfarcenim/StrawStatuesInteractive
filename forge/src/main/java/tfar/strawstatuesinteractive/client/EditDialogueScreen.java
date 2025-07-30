@@ -104,7 +104,7 @@ public class EditDialogueScreen extends AbstractConfiguringScreen {
     private DisplayCache getDisplayCache() {
         if (this.displayCache == null) {
             this.displayCache = this.rebuildDisplayCache();
-            this.pageMsg = Component.translatable("book.pageIndicator", this.currentPage + 1, this.getNumPages());
+            this.pageMsg = Component.empty();//Component.translatable("book.pageIndicator", this.currentPage + 1, this.getNumPages());
         }
 
         return this.displayCache;

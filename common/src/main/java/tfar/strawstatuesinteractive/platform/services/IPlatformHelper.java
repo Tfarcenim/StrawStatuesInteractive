@@ -6,6 +6,7 @@ import net.minecraft.world.entity.Entity;
 import tfar.strawstatuesinteractive.network.SetDialoguePacket;
 import tfar.strawstatuesinteractive.network.client.S2CModPacket;
 import tfar.strawstatuesinteractive.network.client.S2CSetTalkingToPacket;
+import tfar.strawstatuesinteractive.network.server.C2SDialogueButtonPacket;
 import tfar.strawstatuesinteractive.network.server.C2SModPacket;
 
 import java.util.Collection;
@@ -64,4 +65,6 @@ public interface IPlatformHelper {
     void handle(SetDialoguePacket s2CSetDialoguePacket);
 
     void handle(SetDialoguePacket c2SEditDialoguePacket, ServerPlayer player);
+
+    void handle(C2SDialogueButtonPacket c2SDialogueButtonPacket, ServerPlayer player);
 }

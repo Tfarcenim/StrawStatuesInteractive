@@ -23,9 +23,15 @@ public class ScrollableCommandPreview extends ScrollableWidget {
         Font font = Minecraft.getInstance().font;
         NPCCommandEntry npcCommandEntry= parent.npcCommandEntry;
         List<String> commands = npcCommandEntry.commands;
+        int maxWidth = 200;
         if (!commands.isEmpty()) {
+            guiGraphics.enableScissor(left+x, top + y, left+x+this.width-1, top + y + this.height);
             String command0 = commands.get(0);
-            guiGraphics.drawString(font,command0,5,5,0xffffff);
+            guiGraphics.drawString(font,command0,left+x+2,top+y+3,0xff000000,false);
+            if (commands.size()>1) {
+                guiGraphics.drawString(font,commands.get(1),left+x+2,top+y+3+font.lineHeight,0xff000000,false);
+            }
+            guiGraphics.disableScissor();
         }
     }
 

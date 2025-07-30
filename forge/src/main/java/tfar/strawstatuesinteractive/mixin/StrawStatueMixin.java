@@ -2,7 +2,9 @@ package tfar.strawstatuesinteractive.mixin;
 
 import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
 import fuzs.strawstatues.world.entity.decoration.StrawStatue;
+import net.minecraft.commands.Commands;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -53,6 +55,18 @@ abstract class StrawStatueMixin extends ArmorStand implements StrawStatueDuck {
         if (!level().isClientSide) {
             SetDialoguePacket.syncDialogues(this,dialogue);
         }
+    }
+
+    @Override
+    public void sendSystemMessage(Component component) {
+        Player player = level().getNearestPlayer(this,3);
+        if (player != null) {
+            player.sendSystemMessage(component);
+        }
+    }
+
+    protected int getPermissionLevel() {
+        return dialogue != null ? Commands.LEVEL_GAMEMASTERS :Commands.LEVEL_ALL;
     }
 
     @Nullable
