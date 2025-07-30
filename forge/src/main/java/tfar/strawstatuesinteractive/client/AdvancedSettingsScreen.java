@@ -13,11 +13,11 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.levelgen.flat.FlatLayerInfo;
 import tfar.strawstatuesinteractive.Dialogue;
 import tfar.strawstatuesinteractive.NPCCommandEntry;
 import tfar.strawstatuesinteractive.StrawStatueDuck;
 import tfar.strawstatuesinteractive.client.widgets.ScrollableButton;
+import tfar.strawstatuesinteractive.client.widgets.ScrollableCommandPreview;
 import tfar.strawstatuesinteractive.client.widgets.ScrollableEditBox;
 import tfar.strawstatuesinteractive.client.widgets.ScrollableWidget;
 import tfar.strawstatuesinteractive.network.SetDialoguePacket;
@@ -86,7 +86,7 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
     void extract() {
         commandEntries.clear();
         for (DetailsList.Entry entry: list.children() ) {
-            commandEntries.add(entry.NPCCommandEntry);
+            commandEntries.add(entry.npcCommandEntry);
         }
     }
 
@@ -163,7 +163,7 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
 
             private boolean isDragging;
 
-            NPCCommandEntry NPCCommandEntry;
+            public NPCCommandEntry npcCommandEntry;
 
             ScrollableButton mode;
             ScrollableButton enter;
@@ -178,32 +178,37 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
 
             ScrollableButton trash;
 
+            ScrollableCommandPreview commandPreview;
+
             //button mode
             //on enter
             //on exit
-            Entry(NPCCommandEntry NPCCommandEntry, int index) {
-                this.NPCCommandEntry = NPCCommandEntry;
-                mode = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () -> pressMode()).bounds(10, 50, 20, 20),this, NPCCommandEntry.buttonMode);
-                enter = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressEnter()).bounds(95, 50, 20, 20),this, NPCCommandEntry.onEnter);
-                exit = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressExit()).bounds(175, 50, 20, 20),this, NPCCommandEntry.onExit);
+            Entry(NPCCommandEntry npcCommandEntry, int index) {
+                this.npcCommandEntry = npcCommandEntry;
+                mode = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () -> pressMode()).bounds(10, 50, 20, 20),this, npcCommandEntry.buttonMode);
+                enter = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressEnter()).bounds(95, 50, 20, 20),this, npcCommandEntry.onEnter);
+                exit = new ScrollableCheckbox(ScrollableButton.builder(Component.literal("I"), () ->  pressExit()).bounds(175, 50, 20, 20),this, npcCommandEntry.onExit);
                 trash = new ScrollableButton(ScrollableButton.builder(Component.literal("\uD83D\uDDD1").withStyle(ChatFormatting.RED),
                         () ->  pressTrash()).bounds(LIST_WIDTH - 14, 2, 20, 20).disableBackground(),this);
                 this.index = index;
 
                 editBox = new ScrollableEditBox(minecraft.font,12,75,120,12,this);
 
+                commandPreview = new ScrollableCommandPreview(4,15,DetailsList.this.getWidth()-12,24,this);
+
                 editBox.setResponder(this::onNameChanged);
-                editBox.setValue(NPCCommandEntry.name);
+                editBox.setValue(npcCommandEntry.name);
 
                 buttons.add(mode);
                 buttons.add(enter);
                 buttons.add(exit);
                 buttons.add(editBox);
                 buttons.add(trash);
+                buttons.add(commandPreview);
             }
 
             private void onNameChanged(String s) {
-                NPCCommandEntry.name = s;
+                npcCommandEntry.name = s;
             }
 
             Entry(int index) {
@@ -212,14 +217,14 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
 
 
             void pressMode() {
-                NPCCommandEntry.buttonMode = !NPCCommandEntry.buttonMode;
+                npcCommandEntry.buttonMode = !npcCommandEntry.buttonMode;
             }
 
             void pressEnter() {
-                NPCCommandEntry.onEnter = !NPCCommandEntry.onEnter;
+                npcCommandEntry.onEnter = !npcCommandEntry.onEnter;
             }
             void pressExit() {
-                NPCCommandEntry.onExit= !NPCCommandEntry.onExit;
+                npcCommandEntry.onExit= !npcCommandEntry.onExit;
             }
 
             void pressTrash() {
@@ -231,7 +236,7 @@ public class AdvancedSettingsScreen extends AbstractConfiguringScreen{
                 Component component = Component.literal("Command "+index).withStyle(ChatFormatting.DARK_GRAY);
                 guiGraphics.drawString(font, component, left + 4, top + 4, 0xffffff, false);
 
-                int labelY = top + 35;
+                int labelY = top + 55;
                 Component buttonModeC = Component.literal("Button Mode").withStyle(ChatFormatting.DARK_GRAY);
                 guiGraphics.drawString(font, buttonModeC, left + 35, labelY, 0xffffff, false);
                 Component onEnterC = Component.literal("On Enter").withStyle(ChatFormatting.DARK_GRAY);
