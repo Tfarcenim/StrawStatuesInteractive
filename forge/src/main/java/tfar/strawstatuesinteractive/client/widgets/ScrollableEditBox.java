@@ -17,6 +17,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
+import org.lwjgl.glfw.GLFW;
 import tfar.strawstatuesinteractive.client.AdvancedSettingsScreen;
 
 import javax.annotation.Nullable;
@@ -330,7 +331,7 @@ public class ScrollableEditBox extends ScrollableWidget {
                 return true;
             } else {
                 switch (keyCode) {
-                    case 259:
+                    case GLFW.GLFW_KEY_BACKSPACE:
                         if (this.isEditable) {
                             this.shiftPressed = false;
                             this.deleteText(-1);
@@ -338,14 +339,14 @@ public class ScrollableEditBox extends ScrollableWidget {
                         }
 
                         return true;
-                    case 260:
-                    case 264:
-                    case 265:
-                    case 266:
-                    case 267:
+                    case GLFW.GLFW_KEY_INSERT:
+                    case GLFW.GLFW_KEY_DOWN:
+                    case GLFW.GLFW_KEY_UP:
+                    case GLFW.GLFW_KEY_PAGE_UP:
+                    case GLFW.GLFW_KEY_PAGE_DOWN:
                     default:
                         return false;
-                    case 261:
+                    case GLFW.GLFW_KEY_DELETE:
                         if (this.isEditable) {
                             this.shiftPressed = false;
                             this.deleteText(1);
@@ -353,7 +354,7 @@ public class ScrollableEditBox extends ScrollableWidget {
                         }
 
                         return true;
-                    case 262:
+                    case GLFW.GLFW_KEY_RIGHT:
                         if (Screen.hasControlDown()) {
                             this.moveCursorTo(this.getWordPosition(1));
                         } else {
@@ -361,7 +362,7 @@ public class ScrollableEditBox extends ScrollableWidget {
                         }
 
                         return true;
-                    case 263:
+                    case GLFW.GLFW_KEY_LEFT:
                         if (Screen.hasControlDown()) {
                             this.moveCursorTo(this.getWordPosition(-1));
                         } else {
@@ -369,10 +370,10 @@ public class ScrollableEditBox extends ScrollableWidget {
                         }
 
                         return true;
-                    case 268:
+                    case GLFW.GLFW_KEY_HOME:
                         this.moveCursorToStart();
                         return true;
-                    case 269:
+                    case GLFW.GLFW_KEY_END:
                         this.moveCursorToEnd();
                         return true;
                 }
@@ -407,7 +408,7 @@ public class ScrollableEditBox extends ScrollableWidget {
     }
 
     public void onClick(double mouseX, double mouseY) {
-        int i = Mth.floor(mouseX) - x;
+        int i = Mth.floor(mouseX) - x - parent.getLeftPos();
         if (this.bordered) {
             i -= 4;
         }
@@ -497,12 +498,12 @@ public class ScrollableEditBox extends ScrollableWidget {
             maxY = j;
         }
 
-        if (maxX > x + this.width) {
-            maxX = x + this.width;
+        if (maxX > x + this.width+parent.getLeftPos()) {
+            maxX = x + this.width+parent.getLeftPos();
         }
 
-        if (minX > x + this.width) {
-            minX = x + this.width;
+        if (minX > x + this.width+parent.getLeftPos()) {
+            minX = x + this.width+parent.getLeftPos();
         }
 
         guiGraphics.fill(RenderType.guiTextHighlight(), minX, minY, maxX, maxY, -16776961);

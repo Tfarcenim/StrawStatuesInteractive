@@ -130,7 +130,7 @@ public class DialogueScreen extends AbstractScreen {
                 int colum = j % 3;
 
                 Button button = Button.builder(Component.literal(entry.getSecond().name), button1 -> pressDialogueButton(i))
-                        .bounds(leftPos+5+colum*105,topPos+ 165+row * 14, buttonWidth, 20).build();
+                        .bounds(leftPos+5+colum*105,topPos+ 165+row * 21, buttonWidth, 20).build();
                 addRenderableWidget(button);
             }
         }
