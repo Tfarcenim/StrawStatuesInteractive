@@ -108,8 +108,12 @@ public class EditNPCCommandsScreen extends Screen {
     private void saveChanges() {
         if (this.isModified) {
             npcCommandEntry.commands.clear();
-            for (LineInfo lineInfo : displayCache.lines) {
-                npcCommandEntry.commands.add(lineInfo.contents);
+            String[] strings = displayCache.fullText.split("/");
+            for (String s : strings) {
+                s = s.replace("\n","");
+                if (!s.isBlank()) {
+                    npcCommandEntry.commands.add("/"+s);
+                }
             }
         }
     }

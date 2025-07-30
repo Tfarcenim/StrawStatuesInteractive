@@ -71,7 +71,7 @@ public class DialogueScreen extends AbstractScreen {
 
         if (strawStatue != null) {
             float yBodyRot = (float) (((ArmorStand)strawStatue).yBodyRot * Math.PI/180 + Math.PI/8);
-            InventoryScreen.renderEntityInInventory(guiGraphics, leftPos+50, topPos+164, 64,
+            InventoryScreen.renderEntityInInventory(guiGraphics, leftPos+50, topPos+160, 64,
                     new Quaternionf().rotateXYZ((float) Math.PI,/*Util.getMillis() / 200f*/yBodyRot,0), null, strawStatue);
         }
     }
@@ -130,7 +130,7 @@ public class DialogueScreen extends AbstractScreen {
                 int colum = j % 3;
 
                 Button button = Button.builder(Component.literal(entry.getSecond().name), button1 -> pressDialogueButton(i))
-                        .bounds(leftPos+5+colum*105,topPos+ 165+row * 21, buttonWidth, 20).build();
+                        .bounds(leftPos+5+colum*105,topPos+ 162+row * 21, buttonWidth, 20).build();
                 addRenderableWidget(button);
             }
         }
