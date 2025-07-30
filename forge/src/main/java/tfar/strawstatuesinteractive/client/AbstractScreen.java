@@ -12,6 +12,7 @@ import tfar.strawstatuesinteractive.StrawStatuesInteractive;
 public abstract class AbstractScreen extends Screen {
 
     public static final ResourceLocation BACKGROUND = StrawStatuesInteractive.id("textures/gui/background.png");
+    public static final ResourceLocation SLOT = StrawStatuesInteractive.id("textures/gui/slot.png");
 
     /** The X size of the inventory window in pixels. */
     protected int imageWidth = 320;
