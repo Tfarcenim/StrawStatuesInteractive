@@ -45,16 +45,18 @@ public abstract class CommonEditTextScreen extends Screen {
     protected int frameTick;
 
     protected int textHeight = 128;
+    private final int pageTextXOffset;
     protected int textWidth = 114;
 
     protected final TextFieldHelper pageEdit = new TextFieldHelper(this::getCurrentPageText, this::setCurrentPageText, this::getClipboard, this::setClipboard, (p_280853_) -> {
         return p_280853_.length() < 2048 && this.font.wordWrapHeight(p_280853_, textWidth) <= textHeight;
     });
 
-    protected CommonEditTextScreen(Component title,int textWidth,int textHeight) {
+    protected CommonEditTextScreen(Component title,int textWidth,int textHeight,int pageTextXOffset) {
         super(title);
         this.textWidth = textWidth;
         this.textHeight = textHeight;
+        this.pageTextXOffset = pageTextXOffset;
     }
 
     static int findLineFromPos(int[] lineStarts, int find) {
@@ -426,9 +428,13 @@ public abstract class CommonEditTextScreen extends Screen {
 
     }
 
-    protected abstract Pos2i convertScreenToLocal(Pos2i screenPos);
+    protected Pos2i convertScreenToLocal(Pos2i screenPos) {
+        return new Pos2i(screenPos.x() - (this.width - IMAGE_WIDTH) / 2 - pageTextXOffset, screenPos.y() - 18);
+    }
 
-    protected abstract Pos2i convertLocalToScreen(Pos2i localScreenPos);
+    protected Pos2i convertLocalToScreen(Pos2i localScreenPos) {
+        return new Pos2i(localScreenPos.x() + (this.width - IMAGE_WIDTH) / 2 + pageTextXOffset, localScreenPos.y() + 18);
+    }
 
     /**
      * Called when the mouse is dragged within the GUI element.

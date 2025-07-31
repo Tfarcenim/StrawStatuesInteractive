@@ -17,7 +17,7 @@ public class EditNPCCommandsScreen extends CommonEditTextScreen {
     private String page = "";
 
     public EditNPCCommandsScreen(MutableComponent commands, StrawStatue strawStatue, NPCCommandEntry npcCommandEntry) {
-        super(commands,300,224);
+        super(commands,300,224,8);
         this.strawStatue = strawStatue;
         this.npcCommandEntry = npcCommandEntry;
         loadString();
@@ -70,15 +70,4 @@ public class EditNPCCommandsScreen extends CommonEditTextScreen {
         guiGraphics.blitNineSlicedSized(AbstractScreen.SLOT,i+5,15,
                 IMAGE_WIDTH-10,IMAGE_HEIGHT-20,4,4,12,12,0,0,12,12);
     }
-
-    @Override
-    protected Pos2i convertScreenToLocal(Pos2i screenPos) {
-        return new Pos2i(screenPos.x() - (this.width - IMAGE_WIDTH) / 2 - PAGE_TEXT_X_OFFSET, screenPos.y() - 18);
-    }
-
-    @Override
-    protected Pos2i convertLocalToScreen(Pos2i localScreenPos) {
-        return new Pos2i(localScreenPos.x() + (this.width - IMAGE_WIDTH) / 2 + PAGE_TEXT_X_OFFSET, localScreenPos.y() + 18);
-    }
-
 }

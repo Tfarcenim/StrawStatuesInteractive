@@ -13,12 +13,16 @@ import tfar.strawstatuesinteractive.network.SetDialoguePacket;
 import java.util.List;
 
 public class EditDialogueScreen extends CommonEditTextScreen {
-    static final int PAGE_TEXT_X_OFFSET = 8;
     private final StrawStatue strawStatue;
     private String page = "";
 
+    public static final int TEXT_WIDTH = 180;
+    public static final int TEXT_HEIGHT = 200;
+    public static final int PAGE_TEXT_X_OFFSET = 99;
+
+
     public EditDialogueScreen(Component title, StrawStatue strawStatue) {
-        super(title,200,224);
+        super(title,TEXT_WIDTH,TEXT_HEIGHT,PAGE_TEXT_X_OFFSET);
         this.strawStatue = strawStatue;
         loadString();
     }
@@ -76,15 +80,5 @@ public class EditDialogueScreen extends CommonEditTextScreen {
             InventoryScreen.renderEntityInInventory(guiGraphics, i+50, j+150, 64,
                     new Quaternionf().rotateXYZ((float) Math.PI,/*Util.getMillis() / 200f*/yBodyRot,0), null, strawStatue);
         }
-    }
-
-    @Override
-    protected Pos2i convertScreenToLocal(Pos2i screenPos) {
-        return new Pos2i(screenPos.x() - (this.width - IMAGE_WIDTH) / 2 - PAGE_TEXT_X_OFFSET, screenPos.y() - 18);
-    }
-
-    @Override
-    protected Pos2i convertLocalToScreen(Pos2i localScreenPos) {
-        return new Pos2i(localScreenPos.x() + (this.width - IMAGE_WIDTH) / 2 + PAGE_TEXT_X_OFFSET, localScreenPos.y() + 18);
     }
 }
